@@ -112,6 +112,13 @@
   vertical-align: middle;
   margin-right: 6px;
 }
+.export-table td .td-avatar {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 5px;
+}
 .entry-row select, .entry-row input[type="text"] {
   flex: 1;
   min-width: 0;

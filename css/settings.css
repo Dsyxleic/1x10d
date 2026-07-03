@@ -1,3 +1,30 @@
+.settings-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+.settings-tab {
+  font-family: var(--f-body);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--bone-dim);
+  cursor: pointer;
+}
+.settings-tab:hover { color: var(--bone); }
+.settings-tab.is-active {
+  color: var(--bone);
+  border-bottom-color: var(--red);
+}
+.settings-panel { display: none; }
+.settings-panel.is-active { display: block; }
+
 .icon-settings-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

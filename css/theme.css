@@ -132,16 +132,15 @@ a:hover { text-decoration: underline; }
 }
 .btn:hover { background: var(--line); border-color: var(--static); transform: translateY(-1px); }
 .btn-primary {
-  background: var(--red);
+  background: linear-gradient(135deg, var(--red-glow), var(--red));
   border-color: var(--red);
   color: #1a0808;
-  font-weight: 900;
-  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  clip-path: polygon(4% 0, 100% 0, 96% 100%, 0% 100%);
-  box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+  box-shadow: 0 3px 14px rgba(224,57,59,0.4);
 }
-.btn-primary:hover { background: var(--red-glow); border-color: var(--red-glow); }
+.btn-primary:hover { filter: brightness(1.08); box-shadow: 0 4px 18px rgba(224,57,59,0.55); }
 .btn-ghost { border-color: var(--line); color: var(--bone-dim); background: transparent; }
 .btn-ghost:hover { border-color: var(--bone-dim); background: rgba(255,255,255,0.03); color: var(--bone); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }

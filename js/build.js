@@ -122,7 +122,7 @@ function renderBuildTable() {
   });
 
   if (BUILD_CHARACTERS.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" class="dim" style="padding:24px;">Todavía no tienes personajes. Ve a <a href="characters.html">Personajes</a> y añade el primero — aparecerá aquí automáticamente para poder crearle su build.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="dim" style="padding:24px;">Todavía no tienes personajes. Ve a <a href="settings.html">Ajustes</a> y añade el primero — aparecerá aquí automáticamente para poder crearle su build.</td></tr>`;
     return;
   }
 

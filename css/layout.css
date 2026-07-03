@@ -57,35 +57,38 @@ body:not([data-public-page]) {
 .sidebar-nav a {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
+  gap: 10px;
+  padding: 11px 16px;
   font-family: var(--f-body);
-  font-weight: 700;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--bone-dim);
   text-decoration: none;
-  margin: 0 -10px;
-  padding-left: 24px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 .sidebar-nav a::before {
   content: attr(data-ch);
   font-family: var(--f-mono);
   font-size: 12px;
+  text-transform: none;
   color: var(--red-deep);
 }
 .sidebar-nav a:hover {
   color: var(--bone);
+  background: rgba(255,255,255,0.03);
+  border-left-color: var(--red-deep);
 }
 .sidebar-nav a.active {
-  color: #1a0808;
-  background: var(--red);
-  clip-path: polygon(0 0, 100% 0, 92% 100%, 0% 100%);
-  font-style: italic;
-  font-weight: 900;
-  text-transform: uppercase;
-  box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+  color: var(--bone);
+  background: linear-gradient(135deg, rgba(224,57,59,0.22), rgba(224,57,59,0.04));
+  border-left-color: var(--red);
+  font-weight: 800;
 }
-.sidebar-nav a.active::before { color: #1a0808; opacity: 0.75; }
+.sidebar-nav a.active::before { color: var(--red-glow); }
 
 .session-slot {
   padding: 14px 20px 0;
@@ -164,15 +167,24 @@ body:not([data-public-page]) {
 .page-hero h1 {
   display: inline-block;
   margin-top: 8px;
-  background: var(--red);
-  color: #1a0808;
-  font-style: italic;
-  font-weight: 900;
+  color: var(--bone);
+  font-weight: 800;
   text-transform: uppercase;
-  padding: 6px 34px 6px 18px;
-  clip-path: polygon(0 0, 100% 0, 92% 100%, 0% 100%);
-  box-shadow: 4px 4px 0 rgba(0,0,0,0.4);
+  letter-spacing: 0.01em;
+  font-size: 40px;
   position: relative;
+  padding-bottom: 10px;
+}
+.page-hero h1::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 64px;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--red), var(--red-glow));
+  box-shadow: 0 0 14px rgba(224,57,59,0.55);
 }
 .page-hero p {
   color: var(--bone-dim);

@@ -520,11 +520,13 @@ function renderExportPreview() {
     const maxRows = Math.max(1, ...turn.cells.map((c) => c.length));
     for (let r = 0; r < maxRows; r++) {
       html += `<tr${rowStyle}>`;
-      turn.cells.forEach((cell) => {
+      turn.cells.forEach((cell, colIdx) => {
         const entry = cell[r];
         const tag = entry ? tagDef(entry.tag) : null;
+        const character = ROSTER.find((x) => x.id === assignments[colIdx]);
         const style = tag ? `style="background:${hexToRgba(tag.color, 0.28)}; color:${tag.color}; font-weight:600;"` : "";
-        html += `<td ${style}>${entry ? escapeHtml(entry.actionLabel || "") : ""}</td>`;
+        const avatarImg = entry && character?.avatar_url ? `<img src="${character.avatar_url}" class="td-avatar" />` : "";
+        html += `<td ${style}>${avatarImg}${entry ? escapeHtml(entry.actionLabel || "") : ""}</td>`;
       });
       html += "</tr>";
     }
@@ -544,7 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("download-img-btn").addEventListener("click", async () => {
     const target = document.getElementById("export-target");
-    const canvas = await html2canvas(target, { backgroundColor: "#0a0908", scale: 2 });
+    const canvas = await html2canvas(target, { backgroundColor: "#0a0908", scale: 2, useCORS: true });
     const link = document.createElement("a");
     link.download = "rotacion-menhera.png";
     link.href = canvas.toDataURL("image/png");

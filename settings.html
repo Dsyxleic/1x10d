@@ -9,6 +9,7 @@
 <link rel="shortcut icon" href="assets/favicon.ico" />
 <link rel="stylesheet" href="css/theme.css" />
 <link rel="stylesheet" href="css/layout.css" />
+<link rel="stylesheet" href="css/characters.css" />
 <link rel="stylesheet" href="css/settings.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -22,24 +23,164 @@
   <div class="wrap">
     <div class="eyebrow">Canal 08</div>
     <h1>Ajustes</h1>
-    <p>Sube tu propia imagen para cada elemento. Si no subes nada, se usa el icono por defecto.</p>
+    <p>Centro de mando: personajes, personas e iconos de elementos, todo desde un solo sitio.</p>
   </div>
 </section>
 
 <section class="page-body">
   <div class="wrap">
-    <div id="icon-settings-grid" class="icon-settings-grid">
-      <p class="dim">Cargando…</p>
+
+    <div class="settings-tabs">
+      <button class="settings-tab is-active" data-tab="personajes">Personajes</button>
+      <button class="settings-tab" data-tab="personas">Personas</button>
+      <button class="settings-tab" data-tab="elementos">Elementos</button>
     </div>
+
+    <!-- ============ TAB: PERSONAJES ============ -->
+    <div class="settings-panel is-active" data-panel="personajes">
+
+      <div id="add-character-panel" class="panel add-character-panel">
+        <h3 style="margin-bottom:14px;">Añadir personaje</h3>
+        <div class="add-grid">
+          <div>
+            <label>Nombre</label>
+            <input id="new-name" />
+          </div>
+          <div>
+            <label>Subtipo / etiqueta</label>
+            <input id="new-subtype" />
+          </div>
+          <div>
+            <label>Rol (libre, para el Constructor)</label>
+            <input id="new-role" />
+          </div>
+          <div>
+            <label>Elemento</label>
+            <select id="new-element">
+              <option value="">— Sin especificar —</option>
+              <option value="physical">Physical</option>
+              <option value="gun">Gun</option>
+              <option value="fire">Fire</option>
+              <option value="ice">Ice</option>
+              <option value="electric">Electric</option>
+              <option value="wind">Wind</option>
+              <option value="psychokinesis">Psychokinesis</option>
+              <option value="nuclear">Nuclear</option>
+              <option value="bless">Bless</option>
+              <option value="curse">Curse</option>
+            </select>
+          </div>
+          <div>
+            <label>Color de fondo</label>
+            <input id="new-color-bg" type="color" value="#7a1518" />
+          </div>
+          <div>
+            <label>Color de texto</label>
+            <input id="new-color-text" type="color" value="#ede6e0" />
+          </div>
+          <div>
+            <label>Imagen</label>
+            <input id="new-image" type="file" accept="image/*" />
+          </div>
+          <div>
+            <label>Link externo (opcional)</label>
+            <input id="new-link" />
+          </div>
+        </div>
+        <button class="btn btn-primary" id="save-character-btn" style="margin-top:14px;">Guardar personaje</button>
+        <span id="char-save-status" class="dim" style="margin-left:12px; font-size:13px;"></span>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin:24px 0 14px;">
+        <h3>Roster</h3>
+        <button class="btn btn-ghost" id="toggle-add-btn">+ Nuevo personaje</button>
+      </div>
+
+      <div id="character-grid" class="character-grid">
+        <p class="dim">Cargando roster…</p>
+      </div>
+    </div>
+
+    <!-- ============ TAB: PERSONAS ============ -->
+    <div class="settings-panel" data-panel="personas">
+
+      <div id="add-persona-panel" class="panel add-character-panel">
+        <h3 style="margin-bottom:14px;">Añadir persona</h3>
+        <div class="add-grid">
+          <div>
+            <label>Nombre</label>
+            <input id="new-persona-name" />
+          </div>
+          <div>
+            <label>Imagen</label>
+            <input id="new-persona-image" type="file" accept="image/*" />
+          </div>
+          <div>
+            <label>Link externo (opcional)</label>
+            <input id="new-persona-link" />
+          </div>
+        </div>
+        <button class="btn btn-primary" id="save-persona-btn" style="margin-top:14px;">Guardar persona</button>
+        <span id="persona-save-status" class="dim" style="margin-left:12px; font-size:13px;"></span>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin:24px 0 14px;">
+        <h3>Roster de personas</h3>
+        <button class="btn btn-ghost" id="toggle-add-persona-btn">+ Nueva persona</button>
+      </div>
+
+      <div id="persona-grid" class="character-grid">
+        <p class="dim">Cargando…</p>
+      </div>
+    </div>
+
+    <!-- ============ TAB: ELEMENTOS ============ -->
+    <div class="settings-panel" data-panel="elementos">
+      <div id="icon-settings-grid" class="icon-settings-grid">
+        <p class="dim">Cargando…</p>
+      </div>
+    </div>
+
   </div>
 </section>
 
 <div id="site-footer"></div>
 
+<!-- Modal de personajes -->
+<div id="char-modal" class="modal-backdrop hidden">
+  <div class="modal panel">
+    <div class="modal-head">
+      <h3 id="modal-char-name">—</h3>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span id="modal-delete-wrap"></span>
+        <button class="btn btn-ghost" id="modal-close-btn">Cerrar</button>
+      </div>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Modal de personas -->
+<div id="persona-modal" class="modal-backdrop hidden">
+  <div class="modal panel">
+    <div class="modal-head">
+      <h3 id="persona-modal-name">—</h3>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span id="persona-modal-delete-wrap"></span>
+        <button class="btn btn-ghost" id="persona-modal-close-btn">Cerrar</button>
+      </div>
+    </div>
+    <div id="persona-modal-body"></div>
+  </div>
+</div>
+
 <script src="js/supabase-client.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/components.js"></script>
+<script src="js/activity.js"></script>
 <script src="js/icons.js"></script>
+<script src="js/characters.js"></script>
+<script src="js/personas.js"></script>
 <script src="js/settings.js"></script>
 <script>mountChrome('settings');</script>
 </body>

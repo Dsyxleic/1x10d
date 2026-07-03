@@ -10,11 +10,9 @@ function renderHeader(activePage) {
     { href: "index.html", ch: "01", label: "Inicio", key: "home" },
     { href: "tactic-maker.html", ch: "02", label: "Constructor", key: "maker" },
     { href: "library.html", ch: "03", label: "Biblioteca", key: "library" },
-    { href: "characters.html", ch: "04", label: "Personajes", key: "characters" },
-    { href: "personas.html", ch: "05", label: "Personas", key: "personas" },
-    { href: "build.html", ch: "06", label: "Build", key: "build" },
-    { href: "notes.html", ch: "07", label: "Notas", key: "notes" },
-    { href: "settings.html", ch: "08", label: "Ajustes", key: "settings" },
+    { href: "build.html", ch: "04", label: "Build", key: "build" },
+    { href: "notes.html", ch: "05", label: "Notas", key: "notes" },
+    { href: "settings.html", ch: "06", label: "Ajustes", key: "settings" },
   ];
 
   el.innerHTML = `
