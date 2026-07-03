@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Constructor — 1x10d</title>
+<link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="assets/favicon-16.png" sizes="16x16" />
+<link rel="shortcut icon" href="assets/favicon.ico" />
+<link rel="stylesheet" href="css/theme.css" />
+<link rel="stylesheet" href="css/layout.css" />
+<link rel="stylesheet" href="css/tactic-maker.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="auth-checking">
+<div class="crt-overlay"></div>
+<div class="crt-vignette"></div>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="eyebrow">Canal 02</div>
+    <h1>Constructor</h1>
+  </div>
+</section>
+
+<section class="page-body">
+  <div class="wrap">
+
+    <div id="maker-root">
+
+      <!-- Cabecera de la rotación -->
+      <div class="panel setup-panel">
+        <div class="setup-grid">
+          <div>
+            <label>Título de la rotación</label>
+            <input id="rot-title" placeholder="ej. Akechi A6R6 sCloser A6R6" style="width:100%;" />
+          </div>
+          <div>
+            <label>Jefe</label>
+            <div style="display:flex; gap:6px;">
+              <select id="rot-boss" style="flex:1;"></select>
+              <button class="btn btn-ghost" id="new-boss-btn" title="Nuevo jefe">+</button>
+            </div>
+          </div>
+          <div>
+            <label>Modo de juego</label>
+            <div style="display:flex; gap:6px;">
+              <select id="rot-mode" style="flex:1;"></select>
+              <button class="btn btn-ghost" id="new-mode-btn" title="Nuevo modo">+</button>
+            </div>
+          </div>
+          <div>
+            <label>Personaje DPS (para archivo)</label>
+            <select id="rot-dps"></select>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <label>Notas</label>
+          <textarea id="rot-notes" rows="3" style="width:100%; margin-top:4px;" placeholder="Notas para ti mismo sobre esta rotación…"></textarea>
+        </div>
+      </div>
+
+      <!-- Configuración de columnas (personajes en la rotación) -->
+      <div class="panel setup-panel" style="margin-top:14px;">
+        <h3 style="margin-bottom:12px;">Personajes en esta rotación</h3>
+        <div id="column-selectors" class="column-selectors"></div>
+      </div>
+
+      <!-- Wonder -->
+      <div class="panel setup-panel" style="margin-top:14px;">
+        <h3 style="margin-bottom:12px;">Wonder</h3>
+        <div style="margin-bottom:16px;">
+          <label>Cuchillo</label>
+          <input id="wonder-knife" placeholder="ej. Surt" style="max-width:280px;" />
+        </div>
+        <label style="display:block; margin-bottom:8px;">Personas</label>
+        <div id="wonder-persona-slots" class="wonder-persona-slots"></div>
+      </div>
+
+      <!-- Grid de turnos -->
+      <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+        <h3>Rotación</h3>
+        <button class="btn btn-primary" id="add-turn-btn">+ Añadir turno</button>
+      </div>
+      <div id="turns-container" style="margin-top:12px;"></div>
+
+      <div style="margin-top:24px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <button class="btn btn-primary" id="save-rotation-btn">Guardar rotación</button>
+        <button class="btn btn-ghost" id="preview-btn">Vista previa / exportar imagen</button>
+        <span id="save-status" class="dim"></span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Área de exportación como imagen -->
+<div id="export-modal" class="modal-backdrop hidden">
+  <div class="modal panel" style="max-width:900px;">
+    <div class="modal-head">
+      <h3>Vista previa</h3>
+      <button class="btn btn-ghost" id="export-close-btn">Cerrar</button>
+    </div>
+    <div id="export-target"></div>
+    <button class="btn btn-primary" id="download-img-btn" style="margin-top:14px;">Descargar como imagen</button>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/components.js"></script>
+<script src="js/activity.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="js/tactic-maker.js"></script>
+<script>mountChrome('maker');</script>
+</body>
+</html>

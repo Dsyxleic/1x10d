@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Personajes — 1x10d</title>
+<link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="assets/favicon-16.png" sizes="16x16" />
+<link rel="apple-touch-icon" href="assets/favicon-180.png" />
+<link rel="shortcut icon" href="assets/favicon.ico" />
+<link rel="stylesheet" href="css/theme.css" />
+<link rel="stylesheet" href="css/layout.css" />
+<link rel="stylesheet" href="css/characters.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="auth-checking">
+<div class="crt-overlay"></div>
+<div class="crt-vignette"></div>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="eyebrow">Canal 04</div>
+    <h1>Personajes</h1>
+  </div>
+</section>
+
+<section class="page-body">
+  <div class="wrap">
+
+    <div id="add-character-panel" class="panel add-character-panel">
+      <h3 style="margin-bottom:14px;">Añadir personaje</h3>
+      <div class="add-grid">
+        <div>
+          <label>Nombre</label>
+          <input id="new-name" placeholder="ej. CROW" />
+        </div>
+        <div>
+          <label>Subtipo / etiqueta</label>
+          <input id="new-subtype" placeholder="ej. Seaside" />
+        </div>
+        <div>
+          <label>Rol (libre, para el Constructor)</label>
+          <input id="new-role" placeholder="ej. DPS, Support, Wonder" />
+        </div>
+        <div>
+          <label>Elemento</label>
+          <select id="new-element">
+            <option value="">— Sin especificar —</option>
+            <option value="physical">Physical</option>
+            <option value="gun">Gun</option>
+            <option value="fire">Fire</option>
+            <option value="ice">Ice</option>
+            <option value="electric">Electric</option>
+            <option value="wind">Wind</option>
+            <option value="psychokinesis">Psychokinesis</option>
+            <option value="nuclear">Nuclear</option>
+            <option value="bless">Bless</option>
+            <option value="curse">Curse</option>
+          </select>
+        </div>
+        <div>
+          <label>Rol de combate</label>
+          <select id="new-role-combat">
+            <option value="">— Sin especificar —</option>
+            <option value="assassin">Assassin</option>
+            <option value="sweeper">Sweeper</option>
+            <option value="medic">Medic</option>
+            <option value="saboteur">Saboteur</option>
+            <option value="guardian">Guardian</option>
+            <option value="strategist">Strategist</option>
+            <option value="navigator">Navigator</option>
+          </select>
+        </div>
+        <div>
+          <label>Color de fondo</label>
+          <input id="new-color-bg" type="color" value="#45156b" />
+        </div>
+        <div>
+          <label>Color de texto</label>
+          <input id="new-color-text" type="color" value="#ede6f2" />
+        </div>
+        <div>
+          <label>Imagen</label>
+          <input id="new-image" type="file" accept="image/*" />
+        </div>
+        <div>
+          <label>Link externo (opcional)</label>
+          <input id="new-link" placeholder="https://…" />
+        </div>
+      </div>
+      <button class="btn btn-primary" id="save-character-btn" style="margin-top:14px;">Guardar personaje</button>
+      <span id="char-save-status" class="dim" style="margin-left:12px; font-size:13px;"></span>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin:24px 0 14px;">
+      <h3>Roster</h3>
+      <button class="btn btn-ghost" id="toggle-add-btn">+ Nuevo personaje</button>
+    </div>
+
+    <div id="character-grid" class="character-grid">
+      <p class="dim">Cargando roster…</p>
+    </div>
+
+  </div>
+</section>
+
+<div id="site-footer"></div>
+
+<!-- Modal de detalle / gestión de skills -->
+<div id="char-modal" class="modal-backdrop hidden">
+  <div class="modal panel">
+    <div class="modal-head">
+      <h3 id="modal-char-name">—</h3>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span id="modal-delete-wrap"></span>
+        <button class="btn btn-ghost" id="modal-close-btn">Cerrar</button>
+      </div>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/components.js"></script>
+<script src="js/activity.js"></script>
+<script src="js/characters.js"></script>
+<script>mountChrome('characters');</script>
+</body>
+</html>

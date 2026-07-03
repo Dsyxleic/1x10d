@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Build — 1x10d</title>
+<link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="assets/favicon-16.png" sizes="16x16" />
+<link rel="shortcut icon" href="assets/favicon.ico" />
+<link rel="stylesheet" href="css/theme.css" />
+<link rel="stylesheet" href="css/layout.css" />
+<link rel="stylesheet" href="css/build.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="auth-checking">
+<div class="crt-overlay"></div>
+<div class="crt-vignette"></div>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="eyebrow">Canal 06</div>
+    <h1>Build</h1>
+  </div>
+</section>
+
+<section class="page-body">
+  <div class="wrap">
+
+    <div class="panel build-filters">
+      <div>
+        <label>Buscar</label>
+        <input id="filter-search" placeholder="nombre…" />
+      </div>
+      <div>
+        <label>Elemento</label>
+        <div id="filter-elements" class="filter-chip-row"></div>
+      </div>
+      <div>
+        <label>Rol</label>
+        <div id="filter-roles" class="filter-chip-row"></div>
+      </div>
+      <div>
+        <label>Rareza</label>
+        <div class="filter-chip-row">
+          <button class="chip" data-rarity="">Todas</button>
+          <button class="chip" data-rarity="5">5★</button>
+          <button class="chip" data-rarity="4">4★</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="build-table-wrap panel" style="margin-top:18px;">
+      <table class="build-table" id="build-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Nombre</th>
+            <th>Elem.</th>
+            <th>Rol</th>
+            <th>★</th>
+            <th>Nivel</th>
+            <th>Arma</th>
+            <th>Mindscape</th>
+            <th>Cards</th>
+            <th>Awareness</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="build-tbody">
+          <tr><td colspan="11" class="dim" style="padding:20px;">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+<!-- Modal de edición de build -->
+<div id="build-modal" class="modal-backdrop hidden">
+  <div class="modal panel" style="max-width:640px;">
+    <div class="modal-head">
+      <h3 id="build-modal-name">—</h3>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <a class="btn btn-ghost hidden" id="build-modal-link" target="_blank" rel="noopener">Guía externa ↗</a>
+        <button class="btn btn-ghost" id="build-modal-close-btn">Cerrar</button>
+      </div>
+    </div>
+    <div id="build-modal-body"></div>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/components.js"></script>
+<script src="js/activity.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/build.js"></script>
+<script>mountChrome('build');</script>
+</body>
+</html>
