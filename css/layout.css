@@ -77,7 +77,7 @@ body:not([data-public-page]) {
 }
 .sidebar-nav a.active {
   color: var(--bone);
-  background: rgba(217,72,31,0.12);
+  background: rgba(34,211,197,0.14);
   border-left-color: var(--red);
 }
 .sidebar-nav a.active::before { color: var(--red-glow); }

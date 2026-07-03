@@ -7,17 +7,17 @@
 
 :root {
   /* -- Color -- */
-  --void:        #09070d;   /* pantalla apagada */
-  --panel:       #120e18;   /* paneles / tarjetas */
-  --panel-raised:#1a1422;   /* paneles elevados */
-  --line:        #261d30;   /* bordes sutiles */
-  --red:         #d9481f;   /* acento primario: rojo óxido (distinto del rojo de Menhera) */
-  --red-deep:    #6b1f0d;   /* rojo quemado profundo */
-  --red-glow:    #ff7a45;   /* naranja-rojo brillante, hover/highlight */
-  --static:      #3f3650;   /* gris estática */
-  --bone:        #ede6f2;   /* texto principal */
-  --bone-dim:    #a99cbb;   /* texto secundario */
-  --gold:        #d1a13d;   /* acento raro (dorado, se mantiene) */
+  --void:        #1a1820;   /* fondo, gris cálido oscuro (no negro puro) */
+  --panel:       #221f29;   /* paneles / tarjetas */
+  --panel-raised:#2b2733;   /* paneles elevados */
+  --line:        #3b3542;   /* bordes sutiles */
+  --red:         #22d3c5;   /* acento primario: turquesa vivo */
+  --red-deep:    #0e6a62;   /* turquesa profundo */
+  --red-glow:    #6ff2e4;   /* turquesa brillante, hover/highlight */
+  --static:      #4c4655;   /* gris estática */
+  --bone:        #f1ece7;   /* texto principal */
+  --bone-dim:    #b3aabd;   /* texto secundario */
+  --gold:        #f0a336;   /* acento cálido secundario (ámbar) */
 
   /* -- Type -- */
   --f-display: 'Anton', 'Arial Narrow', sans-serif;
@@ -65,7 +65,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 998;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(20,6,4,0.6) 100%);
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(12,10,16,0.55) 100%);
 }
 
 @keyframes flicker {
