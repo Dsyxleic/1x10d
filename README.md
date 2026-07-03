@@ -10,6 +10,7 @@ Web privada de uso personal para Persona 5: The Phantom X. Todo el contenido exi
 2. **Project Settings → API Keys**: copia la **Project URL** y la clave **`anon public`** / **`Publishable key`**.
 qweqweqweqeq
 ## Paso 2 — Base de datos
+qweqweqweqweq
 
 1. **SQL Editor → New query**.
 2. Pega todo el contenido de `sql/schema.sql` y dale a **Run**.
