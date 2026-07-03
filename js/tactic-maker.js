@@ -143,15 +143,19 @@ function renderColumnSelectors() {
 
   box.innerHTML = "";
   for (let i = 0; i < COLUMN_COUNT; i++) {
+    const selectedChar = ROSTER.find((c) => c.id === current[i]);
     const wrap = document.createElement("div");
     wrap.innerHTML = `
       <label>Columna ${i + 1}</label>
-      <select data-col="${i}" class="col-select">
-        <option value="">— Elegir personaje —</option>
-        ${ROSTER.map(
-          (c) => `<option value="${c.id}" ${current[i] === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`
-        ).join("")}
-      </select>
+      <div style="display:flex; align-items:center; gap:8px;">
+        ${selectedChar?.avatar_url ? `<img src="${selectedChar.avatar_url}" class="col-select-avatar" />` : ""}
+        <select data-col="${i}" class="col-select" style="flex:1;">
+          <option value="">— Elegir personaje —</option>
+          ${ROSTER.map(
+            (c) => `<option value="${c.id}" ${current[i] === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`
+          ).join("")}
+        </select>
+      </div>
     `;
     box.appendChild(wrap);
   }
@@ -181,7 +185,10 @@ function renderColumnSelectors() {
   };
 
   box.querySelectorAll(".col-select").forEach((sel) => {
-    sel.addEventListener("change", () => renderTurns());
+    sel.addEventListener("change", () => {
+      renderColumnSelectors();
+      renderTurns();
+    });
   });
 }
 
@@ -545,6 +552,43 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// ---------------- Importar rotación desde archivo ----------------
+
+async function importRotationJSON(file) {
+  const statusEl = document.getElementById("save-status");
+  let data;
+  try {
+    data = JSON.parse(await file.text());
+  } catch (e) {
+    statusEl.textContent = "Ese archivo no es válido.";
+    return;
+  }
+
+  EDITING_ROTATION_ID = null; // se guardará como rotación nueva al pulsar Guardar
+
+  document.getElementById("rot-title").value = data.title || "";
+  document.getElementById("rot-notes").value = data.notes || "";
+  document.getElementById("wonder-knife").value = data.wonder_knife || data.grid?.wonder?.knife || "";
+  if (data.boss_id) document.getElementById("rot-boss").value = data.boss_id;
+  if (data.game_mode_id) document.getElementById("rot-mode").value = data.game_mode_id;
+  if (data.dps_character_id) document.getElementById("rot-dps").value = data.dps_character_id;
+
+  const grid = data.grid || { columns: [], turns: [] };
+  COLUMN_COUNT = grid.columns?.length || 4;
+  TURNS = grid.turns || [];
+  WONDER_PERSONAS = grid.wonder?.personas || [null, null, null];
+
+  renderColumnSelectors();
+  const selects = document.querySelectorAll(".col-select");
+  selects.forEach((s, i) => { if (grid.columns && grid.columns[i]) s.value = grid.columns[i]; });
+  renderColumnSelectors();
+
+  renderTurns();
+  renderWonderPersonaSlots();
+
+  statusEl.textContent = "Archivo importado — revísalo y dale a \"Guardar rotación\".";
+}
+
 // ---------------- Init ----------------
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -552,6 +596,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("save-rotation-btn").addEventListener("click", saveRotation);
   document.getElementById("new-boss-btn").addEventListener("click", createBoss);
   document.getElementById("new-mode-btn").addEventListener("click", createGameMode);
+  document.getElementById("import-json-input").addEventListener("change", (e) => {
+    if (e.target.files[0]) importRotationJSON(e.target.files[0]);
+    e.target.value = "";
+  });
 
   await loadAllActions();
   await loadRosterAndBosses();

@@ -12,6 +12,12 @@
   gap: 12px;
 }
 .column-selectors select { width: 100%; }
+.col-select-avatar {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
 
 .turn-row {
   display: grid;

@@ -4,7 +4,7 @@
 
 let BUILD_CHARACTERS = [];
 let BUILD_MAP = {}; // character_id -> build row
-let BUILD_FILTERS = { search: "", element: "", role: "", rarity: "" };
+let BUILD_FILTERS = { search: "", element: "", rarity: "" };
 let EDIT_STATE = null; // build actualmente en edición dentro del modal
 let EDIT_CHARACTER = null;
 
@@ -54,24 +54,12 @@ function renderFilterChips() {
   const elBox = document.getElementById("filter-elements");
   elBox.innerHTML =
     `<button class="chip is-active" data-element="">Todos</button>` +
-    ELEMENTS.map((e) => `<button class="chip" data-element="${e.key}">${e.icon} ${e.label}</button>`).join("");
-
-  const roleBox = document.getElementById("filter-roles");
-  roleBox.innerHTML =
-    `<button class="chip is-active" data-role="">Todos</button>` +
-    ROLES.map((r) => `<button class="chip" data-role="${r.key}">${r.icon} ${r.label}</button>`).join("");
+    ELEMENTS.map((e) => `<button class="chip" data-element="${e.key}">${e.label}</button>`).join("");
 
   elBox.querySelectorAll(".chip").forEach((btn) => {
     btn.onclick = () => {
       BUILD_FILTERS.element = btn.dataset.element;
       elBox.querySelectorAll(".chip").forEach((b) => b.classList.toggle("is-active", b === btn));
-      renderBuildTable();
-    };
-  });
-  roleBox.querySelectorAll(".chip").forEach((btn) => {
-    btn.onclick = () => {
-      BUILD_FILTERS.role = btn.dataset.role;
-      roleBox.querySelectorAll(".chip").forEach((b) => b.classList.toggle("is-active", b === btn));
       renderBuildTable();
     };
   });
@@ -124,7 +112,6 @@ function renderBuildTable() {
   const filtered = BUILD_CHARACTERS.filter((c) => {
     if (f.search && !c.name.toLowerCase().includes(f.search.toLowerCase())) return false;
     if (f.element && c.element !== f.element) return false;
-    if (f.role && c.role_combat !== f.role) return false;
     if (f.rarity) {
       const b = BUILD_MAP[c.id];
       if (!b || b.rarity !== f.rarity) return false;
@@ -132,8 +119,13 @@ function renderBuildTable() {
     return true;
   });
 
+  if (BUILD_CHARACTERS.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="dim" style="padding:24px;">Todavía no tienes personajes. Ve a <a href="characters.html">Personajes</a> y añade el primero — aparecerá aquí automáticamente para poder crearle su build.</td></tr>`;
+    return;
+  }
+
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="11" class="dim" style="padding:20px;">Nada coincide con el filtro.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="dim" style="padding:20px;">Nada coincide con el filtro.</td></tr>`;
     return;
   }
 
@@ -145,7 +137,6 @@ function renderBuildTable() {
           <td>${c.avatar_url ? `<img src="${c.avatar_url}" class="build-row-avatar" />` : ""}</td>
           <td class="build-row-name">${escapeHtmlB(c.name)}</td>
           <td>${c.element ? elementBadge(c.element) : ""}</td>
-          <td>${c.role_combat ? roleBadge(c.role_combat) : ""}</td>
           <td>${b?.rarity ? `<span class="rarity-pill r${b.rarity}">${b.rarity}★</span>` : `<span class="dim">—</span>`}</td>
           <td>${b?.level || `<span class="dim">—</span>`}</td>
           <td>${b?.has_weapon ? `<span class="mono">Lv ${b.weapon_level || 0}</span>` : `<span class="dim">—</span>`}</td>

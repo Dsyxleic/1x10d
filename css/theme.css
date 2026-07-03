@@ -11,9 +11,9 @@
   --panel:       #120e18;   /* paneles / tarjetas */
   --panel-raised:#1a1422;   /* paneles elevados */
   --line:        #261d30;   /* bordes sutiles */
-  --red:         #8b2fd6;   /* acento primario (violeta, antes rojo) */
-  --red-deep:    #45156b;   /* violeta profundo, sombras/bordes fuertes */
-  --red-glow:    #b565ff;   /* violeta brillante, hover/highlight */
+  --red:         #d9481f;   /* acento primario: rojo óxido (distinto del rojo de Menhera) */
+  --red-deep:    #6b1f0d;   /* rojo quemado profundo */
+  --red-glow:    #ff7a45;   /* naranja-rojo brillante, hover/highlight */
   --static:      #3f3650;   /* gris estática */
   --bone:        #ede6f2;   /* texto principal */
   --bone-dim:    #a99cbb;   /* texto secundario */
@@ -65,7 +65,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 998;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(10,4,20,0.6) 100%);
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(20,6,4,0.6) 100%);
 }
 
 @keyframes flicker {

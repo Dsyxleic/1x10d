@@ -35,7 +35,7 @@
         <div class="setup-grid">
           <div>
             <label>Título de la rotación</label>
-            <input id="rot-title" placeholder="ej. Akechi A6R6 sCloser A6R6" style="width:100%;" />
+            <input id="rot-title" style="width:100%;" />
           </div>
           <div>
             <label>Jefe</label>
@@ -59,7 +59,7 @@
 
         <div style="margin-top:16px;">
           <label>Notas</label>
-          <textarea id="rot-notes" rows="3" style="width:100%; margin-top:4px;" placeholder="Notas para ti mismo sobre esta rotación…"></textarea>
+          <textarea id="rot-notes" rows="3" style="width:100%; margin-top:4px;"></textarea>
         </div>
       </div>
 
@@ -74,7 +74,7 @@
         <h3 style="margin-bottom:12px;">Wonder</h3>
         <div style="margin-bottom:16px;">
           <label>Cuchillo</label>
-          <input id="wonder-knife" placeholder="ej. Surt" style="max-width:280px;" />
+          <input id="wonder-knife" style="max-width:280px;" />
         </div>
         <label style="display:block; margin-bottom:8px;">Personas</label>
         <div id="wonder-persona-slots" class="wonder-persona-slots"></div>
@@ -90,6 +90,10 @@
       <div style="margin-top:24px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <button class="btn btn-primary" id="save-rotation-btn">Guardar rotación</button>
         <button class="btn btn-ghost" id="preview-btn">Vista previa / exportar imagen</button>
+        <label class="btn btn-ghost" for="import-json-input" style="cursor:pointer;">
+          Importar archivo
+          <input type="file" id="import-json-input" accept="application/json" style="display:none;" />
+        </label>
         <span id="save-status" class="dim"></span>
       </div>
     </div>

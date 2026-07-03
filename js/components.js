@@ -1,5 +1,5 @@
 // ============================================================
-// 1x10d — Header y footer compartidos
+// 1x10d — Barra lateral y footer compartidos
 // ============================================================
 
 function renderHeader(activePage) {
@@ -17,25 +17,24 @@ function renderHeader(activePage) {
   ];
 
   el.innerHTML = `
-    <header class="site-header">
-      <div class="wrap">
-        <div class="logo">
-          <img src="assets/brand.png" alt="" class="logo-mark-img" onerror="this.style.display='none'" />
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <img src="assets/brand.png" alt="" class="logo-mark-img" onerror="this.style.display='none'" />
+        <div>
           <span class="mark">1x10d</span>
           <span class="sub">P5:TPX</span>
         </div>
-        <nav class="nav-channels">
-          ${links
-            .map(
-              (l) =>
-                `<a href="${l.href}" data-ch="${l.ch}" class="${l.key === activePage ? "active" : ""}">${l.label}</a>`
-            )
-            .join("")}
-        </nav>
-        <div class="session-slot" id="session-slot"></div>
       </div>
-    </header>
-    <div class="channel-bar"></div>
+      <nav class="sidebar-nav">
+        ${links
+          .map(
+            (l) =>
+              `<a href="${l.href}" data-ch="${l.ch}" class="${l.key === activePage ? "active" : ""}">${l.label}</a>`
+          )
+          .join("")}
+      </nav>
+      <div class="session-slot" id="session-slot"></div>
+    </aside>
   `;
 }
 
@@ -49,6 +48,10 @@ function renderFooter() {
         <div class="footer-brand">
           <img src="assets/brand.png" alt="" class="footer-brand-img" onerror="this.style.display='none'" />
           1x10d — uso personal
+        </div>
+        <div class="footer-credits">
+          <span><span class="label">Discord</span>1x10d</span>
+          <span><span class="label">Correo</span>dsyxleic24@gmail.com</span>
         </div>
       </div>
     </footer>

@@ -69,7 +69,6 @@ async function saveNewCharacter() {
   const subtype = document.getElementById("new-subtype").value.trim();
   const role = document.getElementById("new-role").value.trim();
   const element = document.getElementById("new-element").value;
-  const roleCombat = document.getElementById("new-role-combat").value;
   const colorBg = document.getElementById("new-color-bg").value;
   const colorText = document.getElementById("new-color-text").value;
   const linkUrl = document.getElementById("new-link").value.trim();
@@ -103,7 +102,6 @@ async function saveNewCharacter() {
     subtype,
     role,
     element: element || null,
-    role_combat: roleCombat || null,
     color_bg: colorBg,
     color_text: colorText,
     avatar_url: avatarUrl,
@@ -123,7 +121,6 @@ async function saveNewCharacter() {
   document.getElementById("new-subtype").value = "";
   document.getElementById("new-role").value = "";
   document.getElementById("new-element").value = "";
-  document.getElementById("new-role-combat").value = "";
   document.getElementById("new-link").value = "";
   fileInput.value = "";
   await loadCharacters();
@@ -188,6 +185,22 @@ async function openCharModal(id) {
             <input id="edit-role" value="${escapeHtml(c.role || "")}" />
           </div>
           <div>
+            <label>Elemento</label>
+            <select id="edit-element">
+              <option value="">— Sin especificar —</option>
+              <option value="physical" ${c.element === "physical" ? "selected" : ""}>Physical</option>
+              <option value="gun" ${c.element === "gun" ? "selected" : ""}>Gun</option>
+              <option value="fire" ${c.element === "fire" ? "selected" : ""}>Fire</option>
+              <option value="ice" ${c.element === "ice" ? "selected" : ""}>Ice</option>
+              <option value="electric" ${c.element === "electric" ? "selected" : ""}>Electric</option>
+              <option value="wind" ${c.element === "wind" ? "selected" : ""}>Wind</option>
+              <option value="psychokinesis" ${c.element === "psychokinesis" ? "selected" : ""}>Psychokinesis</option>
+              <option value="nuclear" ${c.element === "nuclear" ? "selected" : ""}>Nuclear</option>
+              <option value="bless" ${c.element === "bless" ? "selected" : ""}>Bless</option>
+              <option value="curse" ${c.element === "curse" ? "selected" : ""}>Curse</option>
+            </select>
+          </div>
+          <div>
             <label>Color de fondo</label>
             <input id="edit-color-bg" type="color" value="${c.color_bg}" />
           </div>
@@ -249,6 +262,7 @@ async function openCharModal(id) {
         name,
         subtype: document.getElementById("edit-subtype").value.trim(),
         role: document.getElementById("edit-role").value.trim(),
+        element: document.getElementById("edit-element").value || null,
         color_bg: document.getElementById("edit-color-bg").value,
         color_text: document.getElementById("edit-color-text").value,
         link_url: document.getElementById("edit-link-url").value.trim() || null,
