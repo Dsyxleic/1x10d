@@ -7,13 +7,13 @@ function renderHeader(activePage) {
   if (!el) return;
 
   const links = [
-    { href: "index.html", ch: "01", label: "INICIO", key: "home" },
-    { href: "tactic-maker.html", ch: "02", label: "CONSTRUCTOR", key: "maker" },
-    { href: "library.html", ch: "03", label: "BIBLIOTECA", key: "library" },
-    { href: "characters.html", ch: "04", label: "PERSONAJES", key: "characters" },
-    { href: "personas.html", ch: "05", label: "PERSONAS", key: "personas" },
-    { href: "build.html", ch: "06", label: "BUILD", key: "build" },
-    { href: "notes.html", ch: "07", label: "NOTAS", key: "notes" },
+    { href: "index.html", ch: "01", label: "Inicio", key: "home" },
+    { href: "tactic-maker.html", ch: "02", label: "Constructor", key: "maker" },
+    { href: "library.html", ch: "03", label: "Biblioteca", key: "library" },
+    { href: "characters.html", ch: "04", label: "Personajes", key: "characters" },
+    { href: "personas.html", ch: "05", label: "Personas", key: "personas" },
+    { href: "build.html", ch: "06", label: "Build", key: "build" },
+    { href: "notes.html", ch: "07", label: "Notas", key: "notes" },
   ];
 
   el.innerHTML = `

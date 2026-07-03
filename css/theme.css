@@ -7,25 +7,25 @@
 
 :root {
   /* -- Color -- */
-  --void:        #1a1820;   /* fondo, gris cálido oscuro (no negro puro) */
-  --panel:       #221f29;   /* paneles / tarjetas */
-  --panel-raised:#2b2733;   /* paneles elevados */
-  --line:        #3b3542;   /* bordes sutiles */
-  --red:         #22d3c5;   /* acento primario: turquesa vivo */
-  --red-deep:    #0e6a62;   /* turquesa profundo */
-  --red-glow:    #6ff2e4;   /* turquesa brillante, hover/highlight */
-  --static:      #4c4655;   /* gris estática */
+  --void:        #141217;   /* fondo, casi negro pero no puro */
+  --panel:       #1c1a20;   /* paneles / tarjetas */
+  --panel-raised:#242128;   /* paneles elevados */
+  --line:        #322e36;   /* bordes sutiles */
+  --red:         #e0393b;   /* acento primario: rojo vivo (distinto del de Menhera) */
+  --red-deep:    #7a1518;   /* rojo profundo */
+  --red-glow:    #ff6b64;   /* rojo-coral brillante, hover/highlight */
+  --static:      #4a444e;   /* gris estática */
   --bone:        #f1ece7;   /* texto principal */
-  --bone-dim:    #b3aabd;   /* texto secundario */
+  --bone-dim:    #a89fac;   /* texto secundario */
   --gold:        #f0a336;   /* acento cálido secundario (ámbar) */
 
   /* -- Type -- */
-  --f-display: 'Anton', 'Arial Narrow', sans-serif;
+  --f-display: 'Inter', system-ui, sans-serif;
   --f-mono:    'VT323', monospace;
   --f-body:    'Inter', system-ui, sans-serif;
 
-  --radius: 2px;
-  --scan-opacity: 0.06;
+  --radius: 6px;
+  --scan-opacity: 0.025;
 }
 
 * { box-sizing: border-box; }
@@ -65,7 +65,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 998;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(12,10,16,0.55) 100%);
+  background: radial-gradient(ellipse at center, transparent 65%, rgba(8,7,10,0.35) 100%);
 }
 
 @keyframes flicker {
@@ -78,8 +78,8 @@ body {
 
 h1, h2, h3, .display {
   font-family: var(--f-display);
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   color: var(--bone);
   margin: 0;
 }

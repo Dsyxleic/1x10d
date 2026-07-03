@@ -56,11 +56,12 @@ body:not([data-public-page]) {
 }
 .sidebar-nav a {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  font-family: var(--f-mono);
-  font-size: 15px;
+  font-family: var(--f-body);
+  font-weight: 600;
+  font-size: 14px;
   color: var(--bone-dim);
   border-left: 3px solid transparent;
   text-decoration: none;
@@ -68,6 +69,7 @@ body:not([data-public-page]) {
 }
 .sidebar-nav a::before {
   content: attr(data-ch);
+  font-family: var(--f-mono);
   font-size: 12px;
   color: var(--red-deep);
 }
