@@ -51,7 +51,7 @@
   vertical-align: middle;
   font-size: 13px;
 }
-.build-table tr:hover td { background: rgba(34,211,197,0.08); }
+.build-table tr:hover td { background: rgba(224,57,59,0.08); }
 
 .build-row-avatar {
   width: 36px;

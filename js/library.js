@@ -5,6 +5,7 @@
 let ALL_ROTATIONS = [];
 let BOSS_MAP = {};
 let CHAR_MAP = {};
+let CHAR_AVATAR_MAP = {};
 let MODE_MAP = {};
 
 function escapeHtml(s) {
@@ -23,7 +24,10 @@ async function loadLibrary() {
 
   ALL_ROTATIONS = rotations || [];
   (bosses || []).forEach((b) => (BOSS_MAP[b.id] = b.name));
-  (chars || []).forEach((c) => (CHAR_MAP[c.id] = c.name));
+  (chars || []).forEach((c) => {
+    CHAR_MAP[c.id] = c.name;
+    CHAR_AVATAR_MAP[c.id] = c.avatar_url;
+  });
   (modes || []).forEach((m) => (MODE_MAP[m.id] = m.name));
 
   const bossFilter = document.getElementById("filter-boss");
@@ -70,9 +74,20 @@ function renderList() {
       const bossName = r.boss_id ? BOSS_MAP[r.boss_id] : null;
       const modeName = r.game_mode_id ? MODE_MAP[r.game_mode_id] : null;
       const dpsName = r.dps_character_id ? CHAR_MAP[r.dps_character_id] : null;
+      const compIds = (r.grid?.columns || []).filter(Boolean);
+      const compHtml = compIds.length
+        ? `<div class="rotation-card-comp">${compIds
+            .map((id) =>
+              CHAR_AVATAR_MAP[id]
+                ? `<img src="${CHAR_AVATAR_MAP[id]}" class="comp-avatar" title="${escapeHtml(CHAR_MAP[id] || "")}" />`
+                : `<span class="comp-avatar comp-avatar-empty" title="${escapeHtml(CHAR_MAP[id] || "?")}"></span>`
+            )
+            .join("")}</div>`
+        : "";
       return `
         <div class="rotation-card panel">
           <div class="rotation-card-title">${escapeHtml(r.title)}</div>
+          ${compHtml}
           <div class="rotation-card-meta">
             ${bossName ? `<span><span class="tag">Jefe</span> ${escapeHtml(bossName)}</span>` : ""}
             ${modeName ? `<span><span class="tag">Modo</span> ${escapeHtml(modeName)}</span>` : ""}

@@ -1,11 +1,11 @@
-* ============================================================
+/* ============================================================
    1x10d — Layout compartido (sidebar, footer)
    ============================================================ */
- 
+
 body:not([data-public-page]) {
   padding-left: 240px;
 }
- 
+
 .sidebar {
   position: fixed;
   left: 0;
@@ -20,7 +20,7 @@ body:not([data-public-page]) {
   overflow-y: auto;
   z-index: 200;
 }
- 
+
 .sidebar-logo {
   display: flex;
   align-items: center;
@@ -46,7 +46,7 @@ body:not([data-public-page]) {
   font-size: 12px;
   color: var(--bone-dim);
 }
- 
+
 .sidebar-nav {
   display: flex;
   flex-direction: column;
@@ -58,14 +58,14 @@ body:not([data-public-page]) {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   font-family: var(--f-body);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   color: var(--bone-dim);
-  border-left: 3px solid transparent;
   text-decoration: none;
-  border-radius: var(--radius);
+  margin: 0 -10px;
+  padding-left: 24px;
 }
 .sidebar-nav a::before {
   content: attr(data-ch);
@@ -75,17 +75,18 @@ body:not([data-public-page]) {
 }
 .sidebar-nav a:hover {
   color: var(--bone);
-  border-left-color: var(--red-deep);
 }
 .sidebar-nav a.active {
   color: #1a0808;
-  background: linear-gradient(90deg, var(--red), var(--red-glow));
-  border-left-color: transparent;
-  font-weight: 700;
-  box-shadow: 0 2px 10px rgba(224,57,59,0.3);
+  background: var(--red);
+  clip-path: polygon(0 0, 100% 0, 92% 100%, 0% 100%);
+  font-style: italic;
+  font-weight: 900;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
 }
-.sidebar-nav a.active::before { color: #1a0808; opacity: 0.7; }
- 
+.sidebar-nav a.active::before { color: #1a0808; opacity: 0.75; }
+
 .session-slot {
   padding: 14px 20px 0;
   margin-top: 14px;
@@ -101,7 +102,7 @@ body:not([data-public-page]) {
   word-break: break-all;
 }
 .session-pill.is-admin { color: var(--gold); }
- 
+
 /* -------- footer / credits -------- */
 .site-footer {
   margin-top: 60px;
@@ -136,12 +137,21 @@ body:not([data-public-page]) {
   color: var(--red-deep);
   margin-right: 4px;
 }
- 
+
 /* -------- page hero band -------- */
 .page-hero {
   padding: 40px 0 24px;
   border-bottom: 1px solid var(--line);
   position: relative;
+  overflow: hidden;
+}
+.page-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 10px 10px;
+  pointer-events: none;
 }
 .page-hero .eyebrow {
   font-family: var(--f-mono);
@@ -149,23 +159,34 @@ body:not([data-public-page]) {
   font-size: 14px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  position: relative;
 }
 .page-hero h1 {
-  font-size: 42px;
-  margin-top: 6px;
+  display: inline-block;
+  margin-top: 8px;
+  background: var(--red);
+  color: #1a0808;
+  font-style: italic;
+  font-weight: 900;
+  text-transform: uppercase;
+  padding: 6px 34px 6px 18px;
+  clip-path: polygon(0 0, 100% 0, 92% 100%, 0% 100%);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.4);
+  position: relative;
 }
 .page-hero p {
   color: var(--bone-dim);
   max-width: 640px;
-  margin-top: 10px;
+  margin-top: 14px;
   font-size: 15px;
   line-height: 1.5;
+  position: relative;
 }
- 
+
 .page-body {
   padding: 32px 0 20px;
 }
- 
+
 @keyframes staticPulse {
   0% { opacity: 0.9; }
   100% { opacity: 0; }
@@ -178,7 +199,7 @@ body:not([data-public-page]) {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>");
   animation: staticPulse 0.35s ease-out forwards;
 }
- 
+
 @media (max-width: 900px) {
   body:not([data-public-page]) { padding-left: 0; padding-top: 56px; }
   .sidebar {
@@ -199,4 +220,3 @@ body:not([data-public-page]) {
   .session-slot { flex-direction: row; border-top: none; padding: 0 0 0 12px; margin-top: 0; }
   .page-hero h1 { font-size: 30px; }
 }
- 

@@ -42,6 +42,8 @@ async function loadBuildData() {
     sb.from("character_builds").select("*"),
   ]);
 
+  await loadIconOverrides();
+
   BUILD_CHARACTERS = chars || [];
   BUILD_MAP = {};
   (builds || []).forEach((b) => (BUILD_MAP[b.character_id] = b));

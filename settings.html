@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ajustes — 1x10d</title>
+<link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="assets/favicon-16.png" sizes="16x16" />
+<link rel="shortcut icon" href="assets/favicon.ico" />
+<link rel="stylesheet" href="css/theme.css" />
+<link rel="stylesheet" href="css/layout.css" />
+<link rel="stylesheet" href="css/settings.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="auth-checking">
+<div class="crt-overlay"></div>
+<div class="crt-vignette"></div>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="eyebrow">Canal 08</div>
+    <h1>Ajustes</h1>
+    <p>Sube tu propia imagen para cada elemento. Si no subes nada, se usa el icono por defecto.</p>
+  </div>
+</section>
+
+<section class="page-body">
+  <div class="wrap">
+    <div id="icon-settings-grid" class="icon-settings-grid">
+      <p class="dim">Cargando…</p>
+    </div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/components.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/settings.js"></script>
+<script>mountChrome('settings');</script>
+</body>
+</html>

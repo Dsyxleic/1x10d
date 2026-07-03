@@ -51,9 +51,26 @@ function findElement(key) {
   return ELEMENTS.find((e) => e.key === key) || null;
 }
 
+// ---------------- Iconos personalizados (subidos desde Ajustes) ----------------
+
+let ICON_OVERRIDES = {};
+
+async function loadIconOverrides() {
+  const { data, error } = await sb.from("icon_assets").select("*").eq("category", "element");
+  if (error) return;
+  ICON_OVERRIDES = {};
+  (data || []).forEach((row) => {
+    if (row.image_url) ICON_OVERRIDES[row.key] = row.image_url;
+  });
+}
+
 function elementBadge(key, size) {
   const e = findElement(key);
   if (!e) return "";
   const s = size || 20;
-  return `<span class="elem-badge" style="width:${s}px;height:${s}px;background:${e.color}22;border-color:${e.color};color:${e.color};" title="${e.label}"><svg viewBox="0 0 24 24" width="${Math.round(s * 0.62)}" height="${Math.round(s * 0.62)}" fill="currentColor">${e.svg}</svg></span>`;
+  const custom = ICON_OVERRIDES[key];
+  const inner = custom
+    ? `<img src="${custom}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="${e.label}" />`
+    : `<svg viewBox="0 0 24 24" width="${Math.round(s * 0.62)}" height="${Math.round(s * 0.62)}" fill="currentColor">${e.svg}</svg>`;
+  return `<span class="elem-badge" style="width:${s}px;height:${s}px;background:${e.color}22;border-color:${e.color};color:${e.color};" title="${e.label}">${inner}</span>`;
 }

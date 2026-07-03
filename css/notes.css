@@ -53,7 +53,7 @@
 .note-item.is-active {
   color: var(--bone);
   border-left-color: var(--red);
-  background: rgba(34,211,197,0.14);
+  background: rgba(224,57,59,0.14);
 }
 
 .notes-editor { padding: 18px; min-height: 460px; }

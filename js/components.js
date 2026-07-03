@@ -14,6 +14,7 @@ function renderHeader(activePage) {
     { href: "personas.html", ch: "05", label: "Personas", key: "personas" },
     { href: "build.html", ch: "06", label: "Build", key: "build" },
     { href: "notes.html", ch: "07", label: "Notas", key: "notes" },
+    { href: "settings.html", ch: "08", label: "Ajustes", key: "settings" },
   ];
 
   el.innerHTML = `

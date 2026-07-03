@@ -26,6 +26,24 @@
   font-size: 18px;
   margin-bottom: 6px;
 }
+.rotation-card-comp {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.comp-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  background: var(--panel-raised);
+}
+.comp-avatar-empty {
+  display: inline-block;
+  background: var(--panel-raised);
+  border-style: dashed;
+}
 .rotation-card-meta {
   font-family: var(--f-mono);
   font-size: 13px;
