@@ -23,7 +23,16 @@
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr);
   gap: 10px;
-  margin-bottom: 12px;
+}
+.turn-block {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 14px;
+  background: var(--panel-raised);
+}
+.turn-block:nth-child(even) {
+  background: color-mix(in srgb, var(--panel-raised) 70%, var(--void) 30%);
 }
 .turn-index {
   display: flex;
@@ -281,12 +290,16 @@
 .export-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 .export-table th, .export-table td {
   border: 1px solid var(--line);
   padding: 6px 10px;
   font-size: 13px;
   text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .export-table th {
   font-family: var(--f-mono);

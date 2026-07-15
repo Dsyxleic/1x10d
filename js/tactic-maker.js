@@ -223,6 +223,9 @@ function renderTurns() {
   container.innerHTML = "";
 
   TURNS.forEach((turn, turnIdx) => {
+    const block = document.createElement("div");
+    block.className = "turn-block";
+
     const row = document.createElement("div");
     row.className = "turn-row";
 
@@ -314,8 +317,9 @@ function renderTurns() {
       renderTurns();
     };
 
-    container.appendChild(row);
-    container.appendChild(removeWrap);
+    block.appendChild(row);
+    block.appendChild(removeWrap);
+    container.appendChild(block);
   });
 }
 
