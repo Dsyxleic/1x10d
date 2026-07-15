@@ -613,19 +613,35 @@ function renderExportPreview() {
   const notes = document.getElementById("rot-notes").value.trim();
   const knife = document.getElementById("wonder-knife").value.trim();
 
-  const personaHtml = WONDER_PERSONAS
+  const personaCells = WONDER_PERSONAS
     .filter((s) => s && s.personaId)
     .map((s) => {
       const p = PERSONAS.find((x) => x.id === s.personaId);
-      return `<span class="export-persona">${p && p.avatar_url ? `<img src="${p.avatar_url}" />` : ""}${p ? escapeHtml(p.name) : ""}${s.skillLabel ? ` — ${escapeHtml(s.skillLabel)}` : ""}</span>`;
+      return `<td>${p && p.avatar_url ? `<img src="${p.avatar_url}" class="th-avatar" />` : ""}${p ? escapeHtml(p.name) : ""}${s.skillLabel ? ` — ${escapeHtml(s.skillLabel)}` : ""}</td>`;
     })
     .join("");
+
+  const headerTableHtml =
+    knife || personaCells
+      ? `<table class="export-header-table">
+          <tr>
+            ${knife ? `<td><strong>Cuchillo</strong><br>${escapeHtml(knife)}</td>` : ""}
+            ${personaCells}
+          </tr>
+        </table>`
+      : "";
+
+  const colWidthPct = (100 / assignments.length).toFixed(3);
 
   let html = `<div class="export-sheet">
     <div class="export-title">${escapeHtml(title)}</div>
     ${notes ? `<div class="export-notes">${escapeHtml(notes)}</div>` : ""}
-    ${knife || personaHtml ? `<div class="export-wonder">${knife ? `<strong>Cuchillo:</strong> ${escapeHtml(knife)} &nbsp; ` : ""}${personaHtml}</div>` : ""}
+    ${headerTableHtml}
     <table class="export-table">
+      <colgroup>
+        <col class="export-turn-th" />
+        ${assignments.map(() => `<col style="width:${colWidthPct}%;" />`).join("")}
+      </colgroup>
       <thead><tr>
         <th class="export-turn-th"></th>
         ${assignments.map((id) => {
@@ -648,7 +664,7 @@ function renderExportPreview() {
     html += `<td class="export-turn-td" style="${turnCellStyle}">${i + 1}</td>`;
 
     turn.cells.forEach((cell, colIdx) => {
-      const character = ROSTER.find((x) => x.id === assignments[colIdx]);
+      const columnCharId = assignments[colIdx];
       if (cell.length === 0) {
         html += `<td></td>`;
         return;
@@ -656,12 +672,16 @@ function renderExportPreview() {
       const actionsHtml = cell
         .map((entry) => {
           const tag = tagDef(entry.tag);
-          const entryChar = ROSTER.find((x) => x.id === (entry.characterId || assignments[colIdx])) || character;
+          const entryCharId = entry.characterId || columnCharId;
+          const entryChar = ROSTER.find((x) => x.id === entryCharId);
           const isWonderEntry = isWonderCharacter(entryChar);
+          // Solo mostramos la foto cuando la acción es de un personaje distinto
+          // al de la columna (o es Wonder, que siempre enseña la Persona usada)
+          const showAvatar = isWonderEntry || entryCharId !== columnCharId;
           const avatarSrc = isWonderEntry
             ? PERSONAS.find((p) => p.id === entry.personaId)?.avatar_url
             : entryChar?.avatar_url;
-          const avatarImg = avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
+          const avatarImg = showAvatar && avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
           let skillIconUrl = null;
           if (entry.actionLabel) {
             if (isWonderEntry) {

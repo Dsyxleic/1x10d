@@ -289,6 +289,34 @@
   height: 20px;
   object-fit: contain;
 }
+.export-header-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-bottom: 16px;
+}
+.export-header-table td {
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--bone-dim);
+  vertical-align: middle;
+}
+.export-header-table td strong {
+  display: block;
+  color: var(--bone);
+  font-family: var(--f-mono);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+.export-header-table img.th-avatar {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  margin-right: 5px;
+}
 .export-table {
   width: 100%;
   border-collapse: collapse;
@@ -313,7 +341,10 @@
   font-weight: 600;
 }
 .cell-action {
+  min-height: 30px;
   padding: 6px 10px;
+  display: flex;
+  align-items: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
