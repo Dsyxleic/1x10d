@@ -1,9 +1,3 @@
-// ============================================================
-// 1x10d — Iconos y colores de Elementos (P5X)
-// Símbolos propios (no son el arte original del juego) pero con
-// la misma lógica de color por elemento.
-// ============================================================
-
 const ELEMENTS = [
   {
     key: "physical", label: "Physical", color: "#c7c0d6",
@@ -50,9 +44,6 @@ const ELEMENTS = [
 function findElement(key) {
   return ELEMENTS.find((e) => e.key === key) || null;
 }
-
-// ---------------- Iconos personalizados (subidos desde Ajustes) ----------------
-
 let ICON_OVERRIDES = {};
 
 async function loadIconOverrides() {

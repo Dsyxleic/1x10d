@@ -1,7 +1,3 @@
-// ============================================================
-// MENHERA — Vista de rotación (solo lectura)
-// ============================================================
-
 function escapeHtml(s) {
   return (s || "").replace(/[&<>"']/g, (c) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -93,7 +89,6 @@ async function loadRotation() {
     (entryPersonas || []).forEach((p) => (entryPersonaMap[p.id] = p));
   }
 
-  // Iconos por skill: de los personajes implicados y, si hay, de sus Personas
   let actionIconMap = {}; // "characterId||label" -> icon_url
   if (allCharIds.size) {
     const { data: actions } = await sb.from("character_actions").select("*").in("character_id", [...allCharIds]);

@@ -1,9 +1,3 @@
--- ============================================================
--- 1x10d — Esquema Supabase (proyecto privado, separado de Menhera)
--- Ejecutar en: Supabase Dashboard > SQL Editor > New query
--- Todo requiere estar logueado. No hay ninguna lectura pública.
--- ============================================================
-
 -- 1) Cuentas con acceso (tú, y quien añadas en el futuro)
 create table if not exists admins (
   user_id uuid primary key references auth.users(id) on delete cascade,

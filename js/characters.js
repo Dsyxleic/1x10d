@@ -1,7 +1,3 @@
-// ============================================================
-// MENHERA — Roster de personajes
-// ============================================================
-
 let CHAR_CACHE = [];
 
 async function loadCharacters() {
@@ -60,9 +56,6 @@ function escapeHtml(s) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[c]));
 }
-
-// ---------------- Crear personaje ----------------
-
 async function saveNewCharacter() {
   const statusEl = document.getElementById("char-save-status");
   const name = document.getElementById("new-name").value.trim();
@@ -125,9 +118,6 @@ async function saveNewCharacter() {
   fileInput.value = "";
   await loadCharacters();
 }
-
-// ---------------- Modal: detalle + skills ----------------
-
 async function openCharModal(id) {
   const c = CHAR_CACHE.find((x) => x.id === id);
   if (!c) return;

@@ -1,7 +1,3 @@
-// ============================================================
-// 1x10d — Sesión (acceso privado: TODO requiere login)
-// ============================================================
-
 window.MenheraAuth = (function () {
   let currentUser = null;
   let isAdmin = false;
@@ -26,7 +22,7 @@ window.MenheraAuth = (function () {
       if (!error) isAdmin = !!data;
     }
 
-    // Candado: cualquier página que no sea login exige sesión válida y permitida
+    // si no eres admin, fuera
     if (!isLoginPage && !isAdmin) {
       window.location.href = "login.html";
       return;

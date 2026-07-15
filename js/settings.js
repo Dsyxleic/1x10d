@@ -1,7 +1,3 @@
-// ============================================================
-// 1x10d — Ajustes: iconos personalizados por elemento
-// ============================================================
-
 function renderIconSettings() {
   const box = document.getElementById("icon-settings-grid");
 

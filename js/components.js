@@ -1,7 +1,3 @@
-// ============================================================
-// 1x10d — Barra lateral y footer compartidos
-// ============================================================
-
 function renderHeader(activePage) {
   const el = document.getElementById("site-header");
   if (!el) return;

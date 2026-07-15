@@ -1,7 +1,3 @@
-// ============================================================
-// MENHERA — Constructor de rotación
-// ============================================================
-
 let ROSTER = [];
 let PERSONAS = [];
 let PERSONA_SKILLS_CACHE = {};
@@ -10,7 +6,6 @@ let TURNS = []; // [{ cells: [ [entry,...], [entry,...], ... ] }]
 let WONDER_PERSONAS = [null, null, null]; // [{ personaId, skillLabel }, ...]
 let EDITING_ROTATION_ID = null;
 
-// Paleta de etiquetas de color para las acciones (fácil de ampliar)
 const TAG_DEFS = [
   { key: "hl", label: "HL", color: "#e8c34a" },
   { key: "navi", label: "Navi", color: "#9fe6a0" },
@@ -36,9 +31,6 @@ function newTurn() {
   for (let i = 0; i < COLUMN_COUNT; i++) cells.push([]);
   return { tag: null, cells };
 }
-
-// ---------------- Carga inicial ----------------
-
 async function loadRosterAndBosses() {
   const { data: chars } = await sb.from("characters").select("*").order("sort_order");
   ROSTER = chars || [];
@@ -209,9 +201,6 @@ function getColumnAssignments() {
   selects.forEach((s) => arr.push(s.value));
   return arr;
 }
-
-// ---------------- Turnos ----------------
-
 function addTurn() {
   TURNS.push(newTurn());
   renderTurns();
@@ -336,12 +325,10 @@ function renderEntryRow(entry, columnCharId) {
     div.style.borderLeft = `3px solid ${tag.color}`;
   }
 
-  // El personaje de esta acción: por defecto el de la columna, pero se puede cambiar
   const effectiveCharId = entry.characterId || columnCharId;
   const character = ROSTER.find((c) => c.id === effectiveCharId);
   const wonderMode = isWonderCharacter(character);
 
-  // Las 3 Personas configuradas arriba en la sección Wonder, para cuando el personaje sea Wonder
   const wonderPersonas = WONDER_PERSONAS
     .filter((s) => s && s.personaId)
     .map((s) => PERSONAS.find((p) => p.id === s.personaId))
@@ -380,7 +367,6 @@ function renderEntryRow(entry, columnCharId) {
   bottomRow.className = "entry-row-bottom";
 
   if (wonderMode) {
-    // Selector de Persona (de las 3 configuradas arriba)
     const personaSelect = document.createElement("select");
     if (wonderPersonas.length === 0) {
       personaSelect.innerHTML = `<option value="">— Configura las 3 Personas arriba —</option>`;
@@ -397,7 +383,6 @@ function renderEntryRow(entry, columnCharId) {
     };
     bottomRow.appendChild(personaSelect);
 
-    // Selector de skill de esa Persona
     const personaSkills = displayPersona ? PERSONA_SKILLS_CACHE[displayPersona.id] || [] : [];
     const skillSelect = document.createElement("select");
     skillSelect.innerHTML =
@@ -447,8 +432,6 @@ function renderEntryRow(entry, columnCharId) {
     };
     bottomRow.appendChild(select);
 
-    // La foto propia de la skill elegida (ej. la portada de la canción de Miku),
-    // aparte de la foto del personaje que ya se muestra arriba
     const selectedAction = actionOptions.find((a) => a.label === entry.actionLabel);
     if (selectedAction?.icon_url) {
       const skillIcon = document.createElement("img");
@@ -500,9 +483,6 @@ function hexToRgba(hex, alpha) {
   const b = parseInt(h.substring(4, 6), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
-
-// ---------------- Cache de acciones por personaje ----------------
-
 let ROSTER_ACTIONS_CACHE = {};
 
 async function loadAllActions() {
@@ -519,9 +499,6 @@ function escapeHtml(s) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[c]));
 }
-
-// ---------------- Guardar / cargar rotación ----------------
-
 async function saveRotation() {
   const statusEl = document.getElementById("save-status");
   const title = document.getElementById("rot-title").value.trim();
@@ -586,16 +563,12 @@ async function loadRotationForEdit(id) {
   WONDER_PERSONAS = grid.wonder?.personas || [null, null, null];
 
   renderColumnSelectors();
-  // reaplicar selección de columnas guardadas
   const selects = document.querySelectorAll(".col-select");
   selects.forEach((s, i) => { if (grid.columns && grid.columns[i]) s.value = grid.columns[i]; });
 
   renderTurns();
   renderWonderPersonaSlots();
 }
-
-// ---------------- Nuevo jefe ----------------
-
 async function createBoss() {
   const name = prompt("Nombre del jefe:");
   if (!name) return;
@@ -603,9 +576,6 @@ async function createBoss() {
   if (error) { alert("Error: " + error.message); return; }
   await loadRosterAndBosses();
 }
-
-// ---------------- Exportar como imagen ----------------
-
 function renderExportPreview() {
   const target = document.getElementById("export-target");
   const assignments = getColumnAssignments();
@@ -675,8 +645,6 @@ function renderExportPreview() {
           const entryCharId = entry.characterId || columnCharId;
           const entryChar = ROSTER.find((x) => x.id === entryCharId);
           const isWonderEntry = isWonderCharacter(entryChar);
-          // Solo mostramos la foto cuando la acción es de un personaje distinto
-          // al de la columna (o es Wonder, que siempre enseña la Persona usada)
           const showAvatar = isWonderEntry || entryCharId !== columnCharId;
           const avatarSrc = isWonderEntry
             ? PERSONAS.find((p) => p.id === entry.personaId)?.avatar_url
@@ -723,9 +691,6 @@ document.addEventListener("DOMContentLoaded", () => {
     link.click();
   });
 });
-
-// ---------------- Importar rotación desde archivo ----------------
-
 async function importRotationJSON(file) {
   const statusEl = document.getElementById("save-status");
   let data;
@@ -760,9 +725,6 @@ async function importRotationJSON(file) {
 
   statusEl.textContent = "Archivo importado — revísalo y dale a \"Guardar rotación\".";
 }
-
-// ---------------- Init ----------------
-
 document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("add-turn-btn").addEventListener("click", addTurn);
   document.getElementById("save-rotation-btn").addEventListener("click", saveRotation);

@@ -1,7 +1,3 @@
-// ============================================================
-// 1x10d — Notas con carpetas
-// ============================================================
-
 let FOLDERS = [];
 let NOTES = [];
 let SELECTED_NOTE_ID = null;
@@ -71,9 +67,6 @@ function renderFolderSelect() {
     `<option value="">Sin carpeta</option>` +
     FOLDERS.map((f) => `<option value="${f.id}">${escapeHtmlN(f.name)}</option>`).join("");
 }
-
-// ---------------- Selección / edición ----------------
-
 function selectNote(id) {
   SELECTED_NOTE_ID = id;
   const note = NOTES.find((n) => n.id === id);
@@ -153,9 +146,6 @@ async function createFolder() {
   if (error) { alert("Error: " + error.message); return; }
   await loadNotesData();
 }
-
-// ---------------- Init ----------------
-
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("new-folder-btn").addEventListener("click", createFolder);
   document.getElementById("new-note-btn").addEventListener("click", createNote);

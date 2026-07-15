@@ -1,7 +1,3 @@
-// ============================================================
-// 1x10d — Build de personajes
-// ============================================================
-
 let BUILD_CHARACTERS = [];
 let BUILD_MAP = {}; // character_id -> build row
 let BUILD_FILTERS = { search: "", element: "", rarity: "" };
@@ -33,9 +29,6 @@ function defaultBuild(characterId) {
     notes: "",
   };
 }
-
-// ---------------- Carga ----------------
-
 async function loadBuildData() {
   const [{ data: chars }, { data: builds }] = await Promise.all([
     sb.from("characters").select("*").order("sort_order"),
@@ -75,9 +68,6 @@ function renderFilterChips() {
   });
   document.querySelector('[data-rarity=""]')?.classList.add("is-active");
 }
-
-// ---------------- Tabla ----------------
-
 function mindscapeMiniHtml(build) {
   const cells = build?.mindscape || defaultBuild(null).mindscape;
   return `<div class="mini-pips">${cells
@@ -155,9 +145,6 @@ function renderBuildTable() {
     btn.onclick = () => openBuildModal(btn.dataset.openId);
   });
 }
-
-// ---------------- Modal de edición ----------------
-
 async function openBuildModal(characterId) {
   const character = BUILD_CHARACTERS.find((c) => c.id === characterId);
   if (!character) return;
@@ -289,8 +276,6 @@ function renderBuildModalBody() {
       <span id="build-save-status" class="dim"></span>
     </div>
   `;
-
-  // ---- listeners ----
   document.getElementById("f-rarity").onchange = (e) => (EDIT_STATE.rarity = e.target.value || null);
   document.getElementById("f-level").onchange = (e) => (EDIT_STATE.level = parseInt(e.target.value, 10) || 1);
   document.getElementById("f-has-weapon").onchange = (e) => {
@@ -360,9 +345,6 @@ async function saveBuild() {
   statusEl.textContent = "Guardado ✓";
   await loadBuildData();
 }
-
-// ---------------- Init ----------------
-
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("filter-search").addEventListener("input", (e) => {
     BUILD_FILTERS.search = e.target.value;

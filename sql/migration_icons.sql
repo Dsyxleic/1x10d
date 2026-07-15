@@ -1,10 +1,3 @@
--- ============================================================
--- 1x10d — Migración: iconos personalizados
--- Permite subir una imagen propia para cada elemento/rol,
--- en vez de usar el emoji por defecto.
--- Ejecutar en: Supabase Dashboard > SQL Editor > New query
--- ============================================================
-
 create table if not exists icon_assets (
   category text not null check (category in ('element','role')),
   key text not null,

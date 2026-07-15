@@ -1,8 +1,3 @@
-/* ============================================================
-   1x10d — Design Tokens
-   Estética: TV CRT vieja, negro/violeta (variante privada de Menhera)
-   ============================================================ */
-
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=VT323&family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
@@ -11,7 +6,7 @@
   --panel:       #1c1a20;   /* paneles / tarjetas */
   --panel-raised:#242128;   /* paneles elevados */
   --line:        #322e36;   /* bordes sutiles */
-  --red:         #e0393b;   /* acento primario: rojo vivo (distinto del de Menhera) */
+  --red:         #e0393b;   /* acento primario: rojo vivo */
   --red-deep:    #7a1518;   /* rojo profundo */
   --red-glow:    #ff6b64;   /* rojo-coral brillante, hover/highlight */
   --static:      #4a444e;   /* gris estática */
@@ -184,8 +179,7 @@ label {
   border-radius: var(--radius);
 }
 
-/* Oculta el contenido mientras se comprueba la sesión, para que
-   nadie sin permiso vea un parpadeo de datos antes de ser redirigido */
+/* oculta el flash de contenido antes de comprobar sesión */
 body.auth-checking .site-header,
 body.auth-checking .site-footer,
 body.auth-checking .page-hero,

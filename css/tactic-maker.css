@@ -160,7 +160,7 @@
   margin-right: 5px;
 }
 .export-turn-th { width: 34px; border: none; background: transparent; }
-.export-turn-td {
+.export-table td.export-turn-td {
   width: 34px;
   text-align: center;
   vertical-align: middle;
