@@ -639,40 +639,47 @@ function renderExportPreview() {
 
   TURNS.forEach((turn, i) => {
     const turnTag = tagDef(turn.tag);
-    const rowStyle = turnTag ? ` style="background:${hexToRgba(turnTag.color, 0.16)};"` : "";
-    const maxRows = Math.max(1, ...turn.cells.map((c) => c.length));
-    for (let r = 0; r < maxRows; r++) {
-      html += `<tr${rowStyle}>`;
-      if (r === 0) {
-        const turnCellStyle = turnTag
-          ? `background:${hexToRgba(turnTag.color, 0.3)}; color:${turnTag.color};`
-          : "color:var(--red-glow);";
-        html += `<td class="export-turn-td" rowspan="${maxRows}" style="${turnCellStyle}">${i + 1}</td>`;
+    const rowStyle = turnTag ? ` style="background:${hexToRgba(turnTag.color, 0.1)};"` : "";
+    const turnCellStyle = turnTag
+      ? `background:${hexToRgba(turnTag.color, 0.3)}; color:${turnTag.color};`
+      : "color:var(--red-glow);";
+
+    html += `<tr${rowStyle}>`;
+    html += `<td class="export-turn-td" style="${turnCellStyle}">${i + 1}</td>`;
+
+    turn.cells.forEach((cell, colIdx) => {
+      const character = ROSTER.find((x) => x.id === assignments[colIdx]);
+      if (cell.length === 0) {
+        html += `<td></td>`;
+        return;
       }
-      turn.cells.forEach((cell, colIdx) => {
-        const entry = cell[r];
-        const tag = entry ? tagDef(entry.tag) : null;
-        const character = ROSTER.find((x) => x.id === (entry?.characterId || assignments[colIdx]));
-        const style = tag ? `style="background:${hexToRgba(tag.color, 0.28)}; color:${tag.color}; font-weight:600;"` : "";
-        const isWonderEntry = entry && isWonderCharacter(character);
-        const avatarSrc = isWonderEntry
-          ? PERSONAS.find((p) => p.id === entry.personaId)?.avatar_url
-          : character?.avatar_url;
-        const avatarImg = entry && avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
-        let skillIconUrl = null;
-        if (entry?.actionLabel) {
-          if (isWonderEntry) {
-            const persona = PERSONAS.find((p) => p.id === entry.personaId);
-            skillIconUrl = persona ? (PERSONA_SKILLS_CACHE[persona.id] || []).find((s) => s.label === entry.actionLabel)?.icon_url : null;
-          } else if (character) {
-            skillIconUrl = (ROSTER_ACTIONS_CACHE[character.id] || []).find((a) => a.label === entry.actionLabel)?.icon_url;
+      const actionsHtml = cell
+        .map((entry) => {
+          const tag = tagDef(entry.tag);
+          const entryChar = ROSTER.find((x) => x.id === (entry.characterId || assignments[colIdx])) || character;
+          const isWonderEntry = isWonderCharacter(entryChar);
+          const avatarSrc = isWonderEntry
+            ? PERSONAS.find((p) => p.id === entry.personaId)?.avatar_url
+            : entryChar?.avatar_url;
+          const avatarImg = avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
+          let skillIconUrl = null;
+          if (entry.actionLabel) {
+            if (isWonderEntry) {
+              const persona = PERSONAS.find((p) => p.id === entry.personaId);
+              skillIconUrl = persona ? (PERSONA_SKILLS_CACHE[persona.id] || []).find((s) => s.label === entry.actionLabel)?.icon_url : null;
+            } else if (entryChar) {
+              skillIconUrl = (ROSTER_ACTIONS_CACHE[entryChar.id] || []).find((a) => a.label === entry.actionLabel)?.icon_url;
+            }
           }
-        }
-        const skillIconImg = skillIconUrl ? `<img src="${skillIconUrl}" class="td-skill-icon" />` : "";
-        html += `<td ${style}>${avatarImg}${skillIconImg}${entry ? escapeHtml(entry.actionLabel || "") : ""}</td>`;
-      });
-      html += "</tr>";
-    }
+          const skillIconImg = skillIconUrl ? `<img src="${skillIconUrl}" class="td-skill-icon" />` : "";
+          const lineStyle = tag ? `background:${hexToRgba(tag.color, 0.28)}; color:${tag.color}; font-weight:600;` : "";
+          return `<div class="cell-action" style="${lineStyle}">${avatarImg}${skillIconImg}${escapeHtml(entry.actionLabel || "")}</div>`;
+        })
+        .join("");
+      html += `<td>${actionsHtml}</td>`;
+    });
+
+    html += "</tr>";
   });
 
   html += `</tbody></table></div>`;

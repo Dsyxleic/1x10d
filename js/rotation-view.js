@@ -118,33 +118,39 @@ async function loadRotation() {
 
   (grid.turns || []).forEach((turn, turnIdx) => {
     const turnColor = turn.tag ? TAG_COLORS[turn.tag] : null;
-    const rowStyle = turnColor ? ` style="background:${turnColor}29;"` : "";
-    const maxRows = Math.max(1, ...turn.cells.map((c) => c.length));
-    for (let row = 0; row < maxRows; row++) {
-      html += `<tr${rowStyle}>`;
-      if (row === 0) {
-        const turnCellStyle = turnColor ? `background:${turnColor}4d; color:${turnColor};` : "color:var(--red-glow);";
-        html += `<td class="export-turn-td" rowspan="${maxRows}" style="${turnCellStyle}">${turnIdx + 1}</td>`;
+    const rowStyle = turnColor ? ` style="background:${turnColor}1a;"` : "";
+    const turnCellStyle = turnColor ? `background:${turnColor}4d; color:${turnColor};` : "color:var(--red-glow);";
+
+    html += `<tr${rowStyle}>`;
+    html += `<td class="export-turn-td" style="${turnCellStyle}">${turnIdx + 1}</td>`;
+
+    turn.cells.forEach((cell, colIdx) => {
+      if (cell.length === 0) {
+        html += `<td></td>`;
+        return;
       }
-      turn.cells.forEach((cell, colIdx) => {
-        const entry = cell[row];
-        const color = entry?.tag ? TAG_COLORS[entry.tag] : null;
-        const style = color ? `style="background:${color}2e; color:${color}; font-weight:600;"` : "";
-        const entryChar = entry ? charMap[entry.characterId || grid.columns[colIdx]] : null;
-        const isWonderEntry = entryChar && entryChar.name.trim().toLowerCase() === "wonder";
-        const avatarSrc = isWonderEntry ? entryPersonaMap[entry.personaId]?.avatar_url : entryChar?.avatar_url;
-        const avatarImg = avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
-        let skillIconUrl = null;
-        if (entry?.actionLabel) {
-          skillIconUrl = isWonderEntry
-            ? personaSkillIconMap[`${entry.personaId}||${entry.actionLabel}`]
-            : actionIconMap[`${entryChar?.id}||${entry.actionLabel}`];
-        }
-        const skillIconImg = skillIconUrl ? `<img src="${skillIconUrl}" class="td-skill-icon" />` : "";
-        html += `<td ${style}>${avatarImg}${skillIconImg}${entry ? escapeHtml(entry.actionLabel || "") : ""}</td>`;
-      });
-      html += "</tr>";
-    }
+      const actionsHtml = cell
+        .map((entry) => {
+          const color = entry?.tag ? TAG_COLORS[entry.tag] : null;
+          const lineStyle = color ? `background:${color}2e; color:${color}; font-weight:600;` : "";
+          const entryChar = charMap[entry.characterId || grid.columns[colIdx]];
+          const isWonderEntry = entryChar && entryChar.name.trim().toLowerCase() === "wonder";
+          const avatarSrc = isWonderEntry ? entryPersonaMap[entry.personaId]?.avatar_url : entryChar?.avatar_url;
+          const avatarImg = avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
+          let skillIconUrl = null;
+          if (entry.actionLabel) {
+            skillIconUrl = isWonderEntry
+              ? personaSkillIconMap[`${entry.personaId}||${entry.actionLabel}`]
+              : actionIconMap[`${entryChar?.id}||${entry.actionLabel}`];
+          }
+          const skillIconImg = skillIconUrl ? `<img src="${skillIconUrl}" class="td-skill-icon" />` : "";
+          return `<div class="cell-action" style="${lineStyle}">${avatarImg}${skillIconImg}${escapeHtml(entry.actionLabel || "")}</div>`;
+        })
+        .join("");
+      html += `<td>${actionsHtml}</td>`;
+    });
+
+    html += "</tr>";
   });
 
   html += `</tbody></table>`;

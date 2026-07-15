@@ -163,6 +163,8 @@
 .export-turn-td {
   width: 34px;
   text-align: center;
+  vertical-align: middle;
+  padding: 8px 4px;
   font-family: var(--f-display);
   font-size: 18px;
   font-weight: 800;
@@ -294,14 +296,13 @@
 }
 .export-table th, .export-table td {
   border: 1px solid var(--line);
-  padding: 6px 10px;
+  padding: 0;
   font-size: 13px;
   text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  vertical-align: top;
 }
 .export-table th {
+  padding: 6px 10px;
   font-family: var(--f-mono);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -310,6 +311,15 @@
   background: rgba(216,30,44,0.25);
   color: var(--red-glow);
   font-weight: 600;
+}
+.cell-action {
+  padding: 6px 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cell-action:not(:last-child) {
+  border-bottom: 1px solid var(--line);
 }
 
 @media (max-width: 900px) {
