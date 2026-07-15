@@ -105,10 +105,20 @@
 }
 .entry-row {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  gap: 4px;
   padding: 6px 8px;
   border-bottom: 1px solid var(--line);
+}
+.entry-row-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.entry-row-bottom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .export-table th .th-avatar {
   width: 22px;
@@ -131,9 +141,8 @@
   padding: 5px 6px;
 }
 .entry-row .entry-char-select {
-  flex: 0 0 76px;
-  font-size: 11px;
-  padding: 5px 3px;
+  flex: 1;
+  font-size: 12px;
 }
 .entry-row button {
   padding: 4px 6px;
