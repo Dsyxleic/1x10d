@@ -172,6 +172,7 @@ async function openPersonaModal(id) {
         .map(
           (s) => `
         <div class="action-row" data-skill-id="${s.id}">
+          ${s.icon_url ? `<img src="${s.icon_url}" class="action-icon" alt="" />` : ""}
           <span>${escapeHtmlP(s.label)}</span>
           ${isAdmin ? `<button class="btn btn-ghost del-skill-btn">Eliminar</button>` : ""}
         </div>
@@ -182,10 +183,12 @@ async function openPersonaModal(id) {
     ${
       isAdmin
         ? `
-      <div style="display:flex; gap:8px; margin-top:16px;">
+      <div class="add-skill-row" style="margin-top:16px;">
         <input id="new-persona-skill" placeholder="ej. Teurgia, buff, curación…" style="flex:1;" />
+        <input id="new-persona-skill-icon" type="file" accept="image/*" title="Imagen de la skill (opcional)" />
         <button class="btn btn-primary" id="add-persona-skill-btn">Añadir</button>
       </div>
+      <span id="add-persona-skill-status" class="dim" style="font-size:12px;"></span>
     `
         : ""
     }
@@ -233,8 +236,30 @@ async function openPersonaModal(id) {
 
     document.getElementById("add-persona-skill-btn").onclick = async () => {
       const label = document.getElementById("new-persona-skill").value.trim();
+      const statusEl = document.getElementById("add-persona-skill-status");
       if (!label) return;
-      await sb.from("persona_skills").insert({ persona_id: id, label, sort_order: (skills || []).length });
+
+      let iconUrl = null;
+      const iconInput = document.getElementById("new-persona-skill-icon");
+      if (iconInput.files && iconInput.files[0]) {
+        statusEl.textContent = "Subiendo imagen…";
+        const file = iconInput.files[0];
+        const path = safeUploadPath(file, "skills/");
+        const { error: uploadError } = await sb.storage.from("images").upload(path, file);
+        if (uploadError) {
+          statusEl.textContent = "Error subiendo imagen: " + uploadError.message;
+          return;
+        }
+        const { data: urlData } = sb.storage.from("images").getPublicUrl(path);
+        iconUrl = urlData.publicUrl;
+      }
+
+      await sb.from("persona_skills").insert({
+        persona_id: id,
+        label,
+        icon_url: iconUrl,
+        sort_order: (skills || []).length,
+      });
       openPersonaModal(id);
     };
 

@@ -411,6 +411,15 @@ function renderEntryRow(entry, columnCharId) {
       renderTurns();
     };
     bottomRow.appendChild(skillSelect);
+
+    const selectedPersonaSkill = personaSkills.find((s) => s.label === entry.actionLabel);
+    if (selectedPersonaSkill?.icon_url) {
+      const skillIcon = document.createElement("img");
+      skillIcon.src = selectedPersonaSkill.icon_url;
+      skillIcon.className = "entry-skill-icon";
+      skillIcon.title = selectedPersonaSkill.label;
+      bottomRow.appendChild(skillIcon);
+    }
   } else {
     const actionOptions = character
       ? ROSTER_ACTIONS_CACHE[character.id] || []
@@ -429,9 +438,21 @@ function renderEntryRow(entry, columnCharId) {
         renderTurns();
       } else {
         entry.actionLabel = select.value;
+        renderTurns();
       }
     };
     bottomRow.appendChild(select);
+
+    // La foto propia de la skill elegida (ej. la portada de la canción de Miku),
+    // aparte de la foto del personaje que ya se muestra arriba
+    const selectedAction = actionOptions.find((a) => a.label === entry.actionLabel);
+    if (selectedAction?.icon_url) {
+      const skillIcon = document.createElement("img");
+      skillIcon.src = selectedAction.icon_url;
+      skillIcon.className = "entry-skill-icon";
+      skillIcon.title = selectedAction.label;
+      bottomRow.appendChild(skillIcon);
+    }
   }
 
   const tagsWrap = document.createElement("div");
@@ -601,7 +622,9 @@ function renderExportPreview() {
     ${notes ? `<div class="export-notes">${escapeHtml(notes)}</div>` : ""}
     ${knife || personaHtml ? `<div class="export-wonder">${knife ? `<strong>Cuchillo:</strong> ${escapeHtml(knife)} &nbsp; ` : ""}${personaHtml}</div>` : ""}
     <table class="export-table">
-      <thead><tr>${assignments.map((id) => {
+      <thead><tr>
+        <th class="export-turn-th"></th>
+        ${assignments.map((id) => {
         const c = ROSTER.find((x) => x.id === id);
         return `<th style="background:${c ? c.color_bg : "#2c1f21"}; color:${c ? c.color_text : "#efe6dd"}">
           ${c && c.avatar_url ? `<img src="${c.avatar_url}" class="th-avatar" />` : ""}
@@ -616,6 +639,12 @@ function renderExportPreview() {
     const maxRows = Math.max(1, ...turn.cells.map((c) => c.length));
     for (let r = 0; r < maxRows; r++) {
       html += `<tr${rowStyle}>`;
+      if (r === 0) {
+        const turnCellStyle = turnTag
+          ? `background:${hexToRgba(turnTag.color, 0.3)}; color:${turnTag.color};`
+          : "color:var(--red-glow);";
+        html += `<td class="export-turn-td" rowspan="${maxRows}" style="${turnCellStyle}">${i + 1}</td>`;
+      }
       turn.cells.forEach((cell, colIdx) => {
         const entry = cell[r];
         const tag = entry ? tagDef(entry.tag) : null;
@@ -626,7 +655,17 @@ function renderExportPreview() {
           ? PERSONAS.find((p) => p.id === entry.personaId)?.avatar_url
           : character?.avatar_url;
         const avatarImg = entry && avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
-        html += `<td ${style}>${avatarImg}${entry ? escapeHtml(entry.actionLabel || "") : ""}</td>`;
+        let skillIconUrl = null;
+        if (entry?.actionLabel) {
+          if (isWonderEntry) {
+            const persona = PERSONAS.find((p) => p.id === entry.personaId);
+            skillIconUrl = persona ? (PERSONA_SKILLS_CACHE[persona.id] || []).find((s) => s.label === entry.actionLabel)?.icon_url : null;
+          } else if (character) {
+            skillIconUrl = (ROSTER_ACTIONS_CACHE[character.id] || []).find((a) => a.label === entry.actionLabel)?.icon_url;
+          }
+        }
+        const skillIconImg = skillIconUrl ? `<img src="${skillIconUrl}" class="td-skill-icon" />` : "";
+        html += `<td ${style}>${avatarImg}${skillIconImg}${entry ? escapeHtml(entry.actionLabel || "") : ""}</td>`;
       });
       html += "</tr>";
     }

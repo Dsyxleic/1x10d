@@ -69,6 +69,7 @@ create table if not exists persona_skills (
   id uuid primary key default gen_random_uuid(),
   persona_id uuid references personas(id) on delete cascade,
   label text not null,
+  icon_url text,
   sort_order int default 0
 );
 

@@ -131,3 +131,31 @@
   padding: 6px 10px;
   font-size: 12px;
 }
+.action-row span {
+  flex: 1;
+}
+.action-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.add-skill-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.add-skill-row input[type="text"],
+.add-skill-row input:not([type]) {
+  flex: 1;
+  min-width: 160px;
+}
+.add-skill-row input[type="file"] {
+  flex: 1;
+  min-width: 160px;
+  font-size: 12px;
+}

@@ -84,6 +84,14 @@
   object-fit: contain;
   flex-shrink: 0;
 }
+.entry-skill-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+}
 .tag-dots {
   display: flex;
   gap: 3px;
@@ -133,6 +141,23 @@
   object-fit: contain;
   vertical-align: middle;
   margin-right: 5px;
+}
+.export-table td .td-skill-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: cover;
+  border-radius: 3px;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+.export-turn-th { width: 34px; border: none; background: transparent; }
+.export-turn-td {
+  width: 34px;
+  text-align: center;
+  font-family: var(--f-display);
+  font-size: 18px;
+  font-weight: 800;
+  background: var(--panel);
 }
 .entry-row select, .entry-row input[type="text"] {
   flex: 1;

@@ -90,10 +90,24 @@ async function loadRotation() {
     (entryPersonas || []).forEach((p) => (entryPersonaMap[p.id] = p));
   }
 
+  // Iconos por skill: de los personajes implicados y, si hay, de sus Personas
+  let actionIconMap = {}; // "characterId||label" -> icon_url
+  if (allCharIds.size) {
+    const { data: actions } = await sb.from("character_actions").select("*").in("character_id", [...allCharIds]);
+    (actions || []).forEach((a) => { if (a.icon_url) actionIconMap[`${a.character_id}||${a.label}`] = a.icon_url; });
+  }
+  let personaSkillIconMap = {}; // "personaId||label" -> icon_url
+  if (allPersonaIds.size) {
+    const { data: pskills } = await sb.from("persona_skills").select("*").in("persona_id", [...allPersonaIds]);
+    (pskills || []).forEach((s) => { if (s.icon_url) personaSkillIconMap[`${s.persona_id}||${s.label}`] = s.icon_url; });
+  }
+
   const TAG_COLORS = { hl: "#e8c34a", navi: "#9fe6a0", teurgia: "#9fd0f0", miku: "#39c5bb", extra: "#c99ee8" };
 
   let html = `<table class="export-table" style="width:100%;">
-    <thead><tr>${grid.columns.map((id) => {
+    <thead><tr>
+      <th class="export-turn-th"></th>
+      ${grid.columns.map((id) => {
       const c = charMap[id];
       return `<th style="background:${c ? c.color_bg : "#2c1f21"}; color:${c ? c.color_text : "#efe6dd"}">
         ${c && c.avatar_url ? `<img src="${c.avatar_url}" class="th-avatar" />` : ""}
@@ -102,12 +116,16 @@ async function loadRotation() {
     }).join("")}</tr></thead>
     <tbody>`;
 
-  (grid.turns || []).forEach((turn) => {
+  (grid.turns || []).forEach((turn, turnIdx) => {
     const turnColor = turn.tag ? TAG_COLORS[turn.tag] : null;
     const rowStyle = turnColor ? ` style="background:${turnColor}29;"` : "";
     const maxRows = Math.max(1, ...turn.cells.map((c) => c.length));
     for (let row = 0; row < maxRows; row++) {
       html += `<tr${rowStyle}>`;
+      if (row === 0) {
+        const turnCellStyle = turnColor ? `background:${turnColor}4d; color:${turnColor};` : "color:var(--red-glow);";
+        html += `<td class="export-turn-td" rowspan="${maxRows}" style="${turnCellStyle}">${turnIdx + 1}</td>`;
+      }
       turn.cells.forEach((cell, colIdx) => {
         const entry = cell[row];
         const color = entry?.tag ? TAG_COLORS[entry.tag] : null;
@@ -116,7 +134,14 @@ async function loadRotation() {
         const isWonderEntry = entryChar && entryChar.name.trim().toLowerCase() === "wonder";
         const avatarSrc = isWonderEntry ? entryPersonaMap[entry.personaId]?.avatar_url : entryChar?.avatar_url;
         const avatarImg = avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
-        html += `<td ${style}>${avatarImg}${entry ? escapeHtml(entry.actionLabel || "") : ""}</td>`;
+        let skillIconUrl = null;
+        if (entry?.actionLabel) {
+          skillIconUrl = isWonderEntry
+            ? personaSkillIconMap[`${entry.personaId}||${entry.actionLabel}`]
+            : actionIconMap[`${entryChar?.id}||${entry.actionLabel}`];
+        }
+        const skillIconImg = skillIconUrl ? `<img src="${skillIconUrl}" class="td-skill-icon" />` : "";
+        html += `<td ${style}>${avatarImg}${skillIconImg}${entry ? escapeHtml(entry.actionLabel || "") : ""}</td>`;
       });
       html += "</tr>";
     }

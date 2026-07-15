@@ -228,6 +228,7 @@ async function openCharModal(id) {
         .map(
           (a) => `
         <div class="action-row" data-action-id="${a.id}">
+          ${a.icon_url ? `<img src="${a.icon_url}" class="action-icon" alt="" />` : ""}
           <span>${escapeHtml(a.label)}</span>
           ${isAdmin ? `<button class="btn btn-ghost del-action-btn">Eliminar</button>` : ""}
         </div>
@@ -238,10 +239,12 @@ async function openCharModal(id) {
     ${
       isAdmin
         ? `
-      <div style="display:flex; gap:8px; margin-top:16px;">
+      <div class="add-skill-row" style="margin-top:16px;">
         <input id="new-action-label" placeholder="ej. Skill 3, Rebelión, Golpe Especial…" style="flex:1;" />
+        <input id="new-action-icon" type="file" accept="image/*" title="Imagen de la skill (opcional)" />
         <button class="btn btn-primary" id="add-action-btn">Añadir</button>
       </div>
+      <span id="add-action-status" class="dim" style="font-size:12px;"></span>
     `
         : ""
     }
@@ -294,8 +297,30 @@ async function openCharModal(id) {
 
     document.getElementById("add-action-btn").onclick = async () => {
       const label = document.getElementById("new-action-label").value.trim();
+      const statusEl = document.getElementById("add-action-status");
       if (!label) return;
-      await sb.from("character_actions").insert({ character_id: id, label, sort_order: (actions || []).length });
+
+      let iconUrl = null;
+      const iconInput = document.getElementById("new-action-icon");
+      if (iconInput.files && iconInput.files[0]) {
+        statusEl.textContent = "Subiendo imagen…";
+        const file = iconInput.files[0];
+        const path = safeUploadPath(file, "skills/");
+        const { error: uploadError } = await sb.storage.from("images").upload(path, file);
+        if (uploadError) {
+          statusEl.textContent = "Error subiendo imagen: " + uploadError.message;
+          return;
+        }
+        const { data: urlData } = sb.storage.from("images").getPublicUrl(path);
+        iconUrl = urlData.publicUrl;
+      }
+
+      await sb.from("character_actions").insert({
+        character_id: id,
+        label,
+        icon_url: iconUrl,
+        sort_order: (actions || []).length,
+      });
       openCharModal(id);
     };
 
