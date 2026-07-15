@@ -703,6 +703,34 @@ document.addEventListener("DOMContentLoaded", () => {
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("rotacion.pdf");
   });
+  document.getElementById("download-pdf-print-btn").addEventListener("click", async () => {
+    const target = document.getElementById("export-target");
+    const sheet = target.querySelector(".export-sheet");
+    sheet.classList.add("print-mode");
+
+    const canvas = await html2canvas(target, { backgroundColor: "#ffffff", scale: 2, useCORS: true });
+    sheet.classList.remove("print-mode");
+
+    const imgData = canvas.toDataURL("image/png");
+    const { jsPDF } = window.jspdf;
+
+    // A4 con márgenes de 10mm, ajustando la imagen para que quepa entera
+    const landscape = canvas.width >= canvas.height;
+    const pdf = new jsPDF({ orientation: landscape ? "landscape" : "portrait", unit: "mm", format: "a4" });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const margin = 10;
+    const maxW = pageW - margin * 2;
+    const maxH = pageH - margin * 2;
+    const ratio = Math.min(maxW / canvas.width, maxH / canvas.height);
+    const w = canvas.width * ratio;
+    const h = canvas.height * ratio;
+    const x = (pageW - w) / 2;
+    const y = (pageH - h) / 2;
+
+    pdf.addImage(imgData, "PNG", x, y, w, h);
+    pdf.save("rotacion-imprimir.pdf");
+  });
 });
 async function importRotationJSON(file) {
   const statusEl = document.getElementById("save-status");
