@@ -345,9 +345,9 @@
   padding: 6px 10px;
   display: flex;
   align-items: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  gap: 4px;
+  white-space: normal;
+  line-height: 1.3;
 }
 .cell-action:not(:last-child) {
   border-bottom: 1px solid var(--line);

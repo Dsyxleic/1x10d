@@ -686,9 +686,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const target = document.getElementById("export-target");
     const canvas = await html2canvas(target, { backgroundColor: "#0a0908", scale: 2, useCORS: true });
     const link = document.createElement("a");
-    link.download = "rotacion-menhera.png";
+    link.download = "rotacion.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
+  });
+  document.getElementById("download-pdf-btn").addEventListener("click", async () => {
+    const target = document.getElementById("export-target");
+    const canvas = await html2canvas(target, { backgroundColor: "#0a0908", scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL("image/png");
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: canvas.width >= canvas.height ? "landscape" : "portrait",
+      unit: "px",
+      format: [canvas.width, canvas.height],
+    });
+    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+    pdf.save("rotacion.pdf");
   });
 });
 async function importRotationJSON(file) {

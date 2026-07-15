@@ -103,13 +103,14 @@
 
 <!-- Área de exportación como imagen -->
 <div id="export-modal" class="modal-backdrop hidden">
-  <div class="modal panel" style="max-width:900px;">
+  <div class="modal panel" style="max-width:1100px;">
     <div class="modal-head">
       <h3>Vista previa</h3>
       <button class="btn btn-ghost" id="export-close-btn">Cerrar</button>
     </div>
     <div id="export-target"></div>
     <button class="btn btn-primary" id="download-img-btn" style="margin-top:14px;">Descargar como imagen</button>
+    <button class="btn btn-ghost" id="download-pdf-btn" style="margin-top:14px;">Descargar como PDF</button>
   </div>
 </div>
 
@@ -120,6 +121,7 @@
 <script src="js/components.js"></script>
 <script src="js/activity.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="js/tactic-maker.js"></script>
 <script>mountChrome('maker');</script>
 </body>
