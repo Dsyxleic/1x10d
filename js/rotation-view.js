@@ -71,14 +71,24 @@ async function loadRotation() {
 
   const grid = r.grid || { columns: [], turns: [] };
   const allCharIds = new Set(grid.columns.filter(Boolean));
+  const allPersonaIds = new Set();
   (grid.turns || []).forEach((turn) => {
     turn.cells.forEach((cell) => {
-      cell.forEach((entry) => { if (entry?.characterId) allCharIds.add(entry.characterId); });
+      cell.forEach((entry) => {
+        if (entry?.characterId) allCharIds.add(entry.characterId);
+        if (entry?.personaId) allPersonaIds.add(entry.personaId);
+      });
     });
   });
   const { data: chars } = await sb.from("characters").select("*").in("id", [...allCharIds]);
   const charMap = {};
   (chars || []).forEach((c) => (charMap[c.id] = c));
+
+  let entryPersonaMap = {};
+  if (allPersonaIds.size) {
+    const { data: entryPersonas } = await sb.from("personas").select("*").in("id", [...allPersonaIds]);
+    (entryPersonas || []).forEach((p) => (entryPersonaMap[p.id] = p));
+  }
 
   const TAG_COLORS = { hl: "#e8c34a", navi: "#9fe6a0", teurgia: "#9fd0f0", miku: "#39c5bb", extra: "#c99ee8" };
 
@@ -103,7 +113,9 @@ async function loadRotation() {
         const color = entry?.tag ? TAG_COLORS[entry.tag] : null;
         const style = color ? `style="background:${color}2e; color:${color}; font-weight:600;"` : "";
         const entryChar = entry ? charMap[entry.characterId || grid.columns[colIdx]] : null;
-        const avatarImg = entryChar?.avatar_url ? `<img src="${entryChar.avatar_url}" class="td-avatar" />` : "";
+        const isWonderEntry = entryChar && entryChar.name.trim().toLowerCase() === "wonder";
+        const avatarSrc = isWonderEntry ? entryPersonaMap[entry.personaId]?.avatar_url : entryChar?.avatar_url;
+        const avatarImg = avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
         html += `<td ${style}>${avatarImg}${entry ? escapeHtml(entry.actionLabel || "") : ""}</td>`;
       });
       html += "</tr>";

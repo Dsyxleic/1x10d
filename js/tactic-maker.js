@@ -28,7 +28,7 @@ function uid() {
 }
 
 function emptyEntry(characterId) {
-  return { id: uid(), characterId: characterId || "", actionLabel: "", tag: null };
+  return { id: uid(), characterId: characterId || "", actionLabel: "", tag: null, personaId: null };
 }
 
 function newTurn() {
@@ -119,6 +119,7 @@ function renderWonderPersonaSlots() {
     personaSelect.onchange = () => {
       WONDER_PERSONAS[i] = { personaId: personaSelect.value, skillLabel: "" };
       renderWonderPersonaSlots();
+      renderTurns();
     };
     div.appendChild(personaSelect);
 
@@ -136,6 +137,7 @@ function renderWonderPersonaSlots() {
         WONDER_PERSONAS[i] = { personaId: slot.personaId, skillLabel: skillSelect.value };
       }
       renderWonderPersonaSlots();
+      renderTurns();
     };
     div.appendChild(skillSelect);
 
@@ -317,6 +319,10 @@ function renderTurns() {
   });
 }
 
+function isWonderCharacter(character) {
+  return !!character && character.name.trim().toLowerCase() === "wonder";
+}
+
 function renderEntryRow(entry, columnCharId) {
   const div = document.createElement("div");
   div.className = "entry-row";
@@ -329,15 +335,25 @@ function renderEntryRow(entry, columnCharId) {
   // El personaje de esta acción: por defecto el de la columna, pero se puede cambiar
   const effectiveCharId = entry.characterId || columnCharId;
   const character = ROSTER.find((c) => c.id === effectiveCharId);
+  const wonderMode = isWonderCharacter(character);
+
+  // Las 3 Personas configuradas arriba en la sección Wonder, para cuando el personaje sea Wonder
+  const wonderPersonas = WONDER_PERSONAS
+    .filter((s) => s && s.personaId)
+    .map((s) => PERSONAS.find((p) => p.id === s.personaId))
+    .filter(Boolean);
+
+  const displayPersona = wonderMode ? PERSONAS.find((p) => p.id === entry.personaId) : null;
 
   const topRow = document.createElement("div");
   topRow.className = "entry-row-top";
 
-  if (character?.avatar_url) {
+  const avatarUrl = wonderMode ? (displayPersona?.avatar_url || null) : character?.avatar_url;
+  if (avatarUrl) {
     const avatar = document.createElement("img");
-    avatar.src = character.avatar_url;
+    avatar.src = avatarUrl;
     avatar.className = "entry-avatar";
-    avatar.title = character.name;
+    avatar.title = wonderMode ? (displayPersona?.name || "Wonder") : character.name;
     topRow.appendChild(avatar);
   }
 
@@ -349,7 +365,8 @@ function renderEntryRow(entry, columnCharId) {
   ).join("");
   charSelect.onchange = () => {
     entry.characterId = charSelect.value;
-    entry.actionLabel = ""; // el listado de acciones cambia con el personaje
+    entry.actionLabel = "";
+    entry.personaId = null; // el personaje cambió, se reinicia la persona elegida
     renderTurns();
   };
   topRow.appendChild(charSelect);
@@ -358,25 +375,64 @@ function renderEntryRow(entry, columnCharId) {
   const bottomRow = document.createElement("div");
   bottomRow.className = "entry-row-bottom";
 
-  const actionOptions = character
-    ? ROSTER_ACTIONS_CACHE[character.id] || []
-    : [];
-
-  const select = document.createElement("select");
-  select.innerHTML =
-    `<option value="">Elegir acción…</option>` +
-    actionOptions.map((a) => `<option value="${escapeHtml(a.label)}" ${entry.actionLabel === a.label ? "selected" : ""}>${escapeHtml(a.label)}</option>`).join("") +
-    `<option value="__custom__" ${entry.actionLabel && !actionOptions.find(a=>a.label===entry.actionLabel) ? "selected" : ""}>✎ Escribir manualmente…</option>`;
-
-  select.onchange = () => {
-    if (select.value === "__custom__") {
-      const custom = prompt("Escribe el nombre de la acción:", entry.actionLabel || "");
-      entry.actionLabel = custom || "";
-      renderTurns();
+  if (wonderMode) {
+    // Selector de Persona (de las 3 configuradas arriba)
+    const personaSelect = document.createElement("select");
+    if (wonderPersonas.length === 0) {
+      personaSelect.innerHTML = `<option value="">— Configura las 3 Personas arriba —</option>`;
+      personaSelect.disabled = true;
     } else {
-      entry.actionLabel = select.value;
+      personaSelect.innerHTML =
+        `<option value="">Elegir Persona…</option>` +
+        wonderPersonas.map((p) => `<option value="${p.id}" ${entry.personaId === p.id ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("");
     }
-  };
+    personaSelect.onchange = () => {
+      entry.personaId = personaSelect.value || null;
+      entry.actionLabel = "";
+      renderTurns();
+    };
+    bottomRow.appendChild(personaSelect);
+
+    // Selector de skill de esa Persona
+    const personaSkills = displayPersona ? PERSONA_SKILLS_CACHE[displayPersona.id] || [] : [];
+    const skillSelect = document.createElement("select");
+    skillSelect.innerHTML =
+      `<option value="">Elegir skill…</option>` +
+      personaSkills.map((s) => `<option value="${escapeHtml(s.label)}" ${entry.actionLabel === s.label ? "selected" : ""}>${escapeHtml(s.label)}</option>`).join("") +
+      `<option value="__custom__" ${entry.actionLabel && !personaSkills.find(s=>s.label===entry.actionLabel) ? "selected" : ""}>✎ Escribir manualmente…</option>`;
+    skillSelect.disabled = !displayPersona;
+    skillSelect.onchange = () => {
+      if (skillSelect.value === "__custom__") {
+        const custom = prompt("Escribe la skill:", entry.actionLabel || "");
+        entry.actionLabel = custom || "";
+      } else {
+        entry.actionLabel = skillSelect.value;
+      }
+      renderTurns();
+    };
+    bottomRow.appendChild(skillSelect);
+  } else {
+    const actionOptions = character
+      ? ROSTER_ACTIONS_CACHE[character.id] || []
+      : [];
+
+    const select = document.createElement("select");
+    select.innerHTML =
+      `<option value="">Elegir acción…</option>` +
+      actionOptions.map((a) => `<option value="${escapeHtml(a.label)}" ${entry.actionLabel === a.label ? "selected" : ""}>${escapeHtml(a.label)}</option>`).join("") +
+      `<option value="__custom__" ${entry.actionLabel && !actionOptions.find(a=>a.label===entry.actionLabel) ? "selected" : ""}>✎ Escribir manualmente…</option>`;
+
+    select.onchange = () => {
+      if (select.value === "__custom__") {
+        const custom = prompt("Escribe el nombre de la acción:", entry.actionLabel || "");
+        entry.actionLabel = custom || "";
+        renderTurns();
+      } else {
+        entry.actionLabel = select.value;
+      }
+    };
+    bottomRow.appendChild(select);
+  }
 
   const tagsWrap = document.createElement("div");
   tagsWrap.className = "tag-dots";
@@ -405,7 +461,6 @@ function renderEntryRow(entry, columnCharId) {
     renderTurns();
   };
 
-  bottomRow.appendChild(select);
   bottomRow.appendChild(tagsWrap);
   bottomRow.appendChild(delBtn);
   div.appendChild(bottomRow);
@@ -566,7 +621,11 @@ function renderExportPreview() {
         const tag = entry ? tagDef(entry.tag) : null;
         const character = ROSTER.find((x) => x.id === (entry?.characterId || assignments[colIdx]));
         const style = tag ? `style="background:${hexToRgba(tag.color, 0.28)}; color:${tag.color}; font-weight:600;"` : "";
-        const avatarImg = entry && character?.avatar_url ? `<img src="${character.avatar_url}" class="td-avatar" />` : "";
+        const isWonderEntry = entry && isWonderCharacter(character);
+        const avatarSrc = isWonderEntry
+          ? PERSONAS.find((p) => p.id === entry.personaId)?.avatar_url
+          : character?.avatar_url;
+        const avatarImg = entry && avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
         html += `<td ${style}>${avatarImg}${entry ? escapeHtml(entry.actionLabel || "") : ""}</td>`;
       });
       html += "</tr>";
