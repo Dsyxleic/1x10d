@@ -84,7 +84,7 @@ async function saveNewCharacter() {
   let avatarUrl = null;
   if (fileInput.files && fileInput.files[0]) {
     const file = fileInput.files[0];
-    const path = `${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
+    const path = safeUploadPath(file);
     const { error: uploadError } = await sb.storage
       .from("images")
       .upload(path, file);
@@ -271,7 +271,7 @@ async function openCharModal(id) {
       const fileInput = document.getElementById("edit-image");
       if (fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
-        const path = `${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
+        const path = safeUploadPath(file);
         const { error: uploadError } = await sb.storage.from("images").upload(path, file);
         if (uploadError) {
           statusEl.textContent = "Error subiendo imagen: " + uploadError.message;

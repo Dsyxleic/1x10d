@@ -46,20 +46,20 @@ async function loadRotation() {
   }
 
   const grid0 = r.grid || {};
-  const personaIds = (grid0.wonder?.personas || []).filter((s) => s && s.personaId).map((s) => s.personaId);
-  let personaMap = {};
-  if (personaIds.length) {
-    const { data: personas } = await sb.from("personas").select("*").in("id", personaIds);
-    (personas || []).forEach((p) => (personaMap[p.id] = p));
+  const wonderCharIds = (grid0.wonder?.personas || []).filter((s) => s && s.characterId).map((s) => s.characterId);
+  let wonderCharMap = {};
+  if (wonderCharIds.length) {
+    const { data: wchars } = await sb.from("characters").select("*").in("id", wonderCharIds);
+    (wchars || []).forEach((c) => (wonderCharMap[c.id] = c));
   }
 
-  if (r.wonder_knife || personaIds.length) {
+  if (r.wonder_knife || wonderCharIds.length) {
     document.getElementById("rv-wonder").classList.remove("hidden");
     const personaHtml = (grid0.wonder?.personas || [])
-      .filter((s) => s && s.personaId)
+      .filter((s) => s && s.characterId)
       .map((s) => {
-        const p = personaMap[s.personaId];
-        return `<span class="export-persona">${p && p.avatar_url ? `<img src="${p.avatar_url}" />` : ""}${p ? escapeHtml(p.name) : ""}${s.skillLabel ? ` — ${escapeHtml(s.skillLabel)}` : ""}</span>`;
+        const c = wonderCharMap[s.characterId];
+        return `<span class="export-persona">${c && c.avatar_url ? `<img src="${c.avatar_url}" />` : ""}${c ? escapeHtml(c.name) : ""}${s.skillLabel ? ` — ${escapeHtml(s.skillLabel)}` : ""}</span>`;
       })
       .join("  ");
     document.getElementById("rv-wonder").innerHTML = `
@@ -70,7 +70,13 @@ async function loadRotation() {
   }
 
   const grid = r.grid || { columns: [], turns: [] };
-  const { data: chars } = await sb.from("characters").select("*").in("id", grid.columns.filter(Boolean));
+  const allCharIds = new Set(grid.columns.filter(Boolean));
+  (grid.turns || []).forEach((turn) => {
+    turn.cells.forEach((cell) => {
+      cell.forEach((entry) => { if (entry?.characterId) allCharIds.add(entry.characterId); });
+    });
+  });
+  const { data: chars } = await sb.from("characters").select("*").in("id", [...allCharIds]);
   const charMap = {};
   (chars || []).forEach((c) => (charMap[c.id] = c));
 
@@ -92,11 +98,13 @@ async function loadRotation() {
     const maxRows = Math.max(1, ...turn.cells.map((c) => c.length));
     for (let row = 0; row < maxRows; row++) {
       html += `<tr${rowStyle}>`;
-      turn.cells.forEach((cell) => {
+      turn.cells.forEach((cell, colIdx) => {
         const entry = cell[row];
         const color = entry?.tag ? TAG_COLORS[entry.tag] : null;
         const style = color ? `style="background:${color}2e; color:${color}; font-weight:600;"` : "";
-        html += `<td ${style}>${entry ? escapeHtml(entry.actionLabel || "") : ""}</td>`;
+        const entryChar = entry ? charMap[entry.characterId || grid.columns[colIdx]] : null;
+        const avatarImg = entryChar?.avatar_url ? `<img src="${entryChar.avatar_url}" class="td-avatar" />` : "";
+        html += `<td ${style}>${avatarImg}${entry ? escapeHtml(entry.actionLabel || "") : ""}</td>`;
       });
       html += "</tr>";
     }

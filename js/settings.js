@@ -44,7 +44,7 @@ async function uploadIcon(card) {
 
   statusEl.textContent = "Subiendo…";
 
-  const path = `icons/element-${key}-${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
+  const path = safeUploadPath(file, `icons/element-${key}-`);
   const { error: uploadError } = await sb.storage.from("images").upload(path, file);
   if (uploadError) {
     statusEl.textContent = "Error: " + uploadError.message;

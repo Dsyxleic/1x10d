@@ -73,7 +73,7 @@ async function saveNewPersona() {
   let avatarUrl = null;
   if (fileInput.files && fileInput.files[0]) {
     const file = fileInput.files[0];
-    const path = `personas/${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
+    const path = safeUploadPath(file, "personas/");
     const { error: uploadError } = await sb.storage.from("images").upload(path, file);
     if (uploadError) {
       statusEl.textContent = "Error subiendo imagen: " + uploadError.message;
@@ -210,7 +210,7 @@ async function openPersonaModal(id) {
       const fileInput = document.getElementById("edit-persona-image");
       if (fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
-        const path = `personas/${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
+        const path = safeUploadPath(file, "personas/");
         const { error: uploadError } = await sb.storage.from("images").upload(path, file);
         if (uploadError) {
           statusEl.textContent = "Error subiendo imagen: " + uploadError.message;

@@ -21,7 +21,7 @@
 
 .turn-row {
   display: grid;
-  grid-template-columns: 44px 1fr;
+  grid-template-columns: 44px minmax(0, 1fr);
   gap: 10px;
   margin-bottom: 12px;
 }
@@ -45,6 +45,10 @@
   gap: 3px;
   max-width: 40px;
 }
+.turn-cols-scroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
 .turn-cols {
   display: grid;
   gap: 10px;
@@ -53,6 +57,7 @@
   background: var(--panel);
   border: 1px solid var(--line);
   border-top: 3px solid var(--static);
+  min-width: 230px;
 }
 .turn-cell.col-highlight-head {
   border-top-color: var(--red);
@@ -124,6 +129,11 @@
   min-width: 0;
   font-size: 13px;
   padding: 5px 6px;
+}
+.entry-row .entry-char-select {
+  flex: 0 0 76px;
+  font-size: 11px;
+  padding: 5px 3px;
 }
 .entry-row button {
   padding: 4px 6px;
