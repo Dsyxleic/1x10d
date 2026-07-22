@@ -288,7 +288,12 @@ async function openCharModal(id) {
     document.getElementById("add-action-btn").onclick = async () => {
       const label = document.getElementById("new-action-label").value.trim();
       const statusEl = document.getElementById("add-action-status");
-      if (!label) return;
+      if (!label) {
+        statusEl.textContent = "Escribe algo antes de añadir.";
+        return;
+      }
+
+      statusEl.textContent = "Guardando…";
 
       let iconUrl = null;
       const iconInput = document.getElementById("new-action-icon");
@@ -305,12 +310,17 @@ async function openCharModal(id) {
         iconUrl = urlData.publicUrl;
       }
 
-      await sb.from("character_actions").insert({
+      const { error: insertError } = await sb.from("character_actions").insert({
         character_id: id,
         label,
         icon_url: iconUrl,
         sort_order: (actions || []).length,
       });
+
+      if (insertError) {
+        statusEl.textContent = "Error: " + insertError.message;
+        return;
+      }
       openCharModal(id);
     };
 

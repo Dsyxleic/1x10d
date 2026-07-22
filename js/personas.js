@@ -233,7 +233,12 @@ async function openPersonaModal(id) {
     document.getElementById("add-persona-skill-btn").onclick = async () => {
       const label = document.getElementById("new-persona-skill").value.trim();
       const statusEl = document.getElementById("add-persona-skill-status");
-      if (!label) return;
+      if (!label) {
+        statusEl.textContent = "Escribe algo antes de añadir.";
+        return;
+      }
+
+      statusEl.textContent = "Guardando…";
 
       let iconUrl = null;
       const iconInput = document.getElementById("new-persona-skill-icon");
@@ -250,12 +255,18 @@ async function openPersonaModal(id) {
         iconUrl = urlData.publicUrl;
       }
 
-      await sb.from("persona_skills").insert({
+      const { error: insertError } = await sb.from("persona_skills").insert({
         persona_id: id,
         label,
         icon_url: iconUrl,
         sort_order: (skills || []).length,
       });
+
+      if (insertError) {
+        statusEl.textContent = "Error: " + insertError.message;
+        return;
+      }
+
       openPersonaModal(id);
     };
 
