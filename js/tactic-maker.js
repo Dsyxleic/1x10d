@@ -1,7 +1,7 @@
 let ROSTER = [];
 let PERSONAS = [];
 let PERSONA_SKILLS_CACHE = {};
-let COLUMN_COUNT = 4;
+let COLUMN_COUNT = 5;
 let TURNS = []; // [{ cells: [ [entry,...], [entry,...], ... ] }]
 let WONDER_PERSONAS = [null, null, null]; // [{ personaId, skillLabel }, ...]
 let EDITING_ROTATION_ID = null;
@@ -255,8 +255,8 @@ function renderTurns() {
 
     const colsWrap = document.createElement("div");
     colsWrap.className = "turn-cols";
-    colsWrap.style.gridTemplateColumns = `repeat(${COLUMN_COUNT}, minmax(230px, 1fr))`;
-    colsWrap.style.minWidth = `${COLUMN_COUNT * 230 + (COLUMN_COUNT - 1) * 10}px`;
+    colsWrap.style.gridTemplateColumns = `repeat(${COLUMN_COUNT}, minmax(165px, 1fr))`;
+    colsWrap.style.minWidth = `${COLUMN_COUNT * 165 + (COLUMN_COUNT - 1) * 10}px`;
     colsWrap.style.display = "grid";
 
     for (let colIdx = 0; colIdx < COLUMN_COUNT; colIdx++) {
@@ -766,6 +766,188 @@ async function importRotationJSON(file) {
 
   statusEl.textContent = "Archivo importado — revísalo y dale a \"Guardar rotación\".";
 }
+// ---------------- Importar desde Lufel Tactic Maker ----------------
+
+let LUFEL_DATA = null;
+let LUFEL_CHAR_NAMES = [];
+let LUFEL_PERSONA_NAMES = [];
+
+const LUFEL_ACTION_DICT = {
+  "스킬1": "Skill 1",
+  "스킬2": "Skill 2",
+  "스킬3": "Skill 3",
+  "아이템": "Item",
+  "skill1": "Skill 1",
+  "skill2": "Skill 2",
+  "skill3": "Skill 3",
+  "item": "Item",
+};
+
+async function handleLufelFile(file) {
+  let data;
+  try {
+    data = JSON.parse(await file.text());
+  } catch (e) {
+    alert("Ese archivo no es válido.");
+    return;
+  }
+  LUFEL_DATA = data;
+
+  const charNames = new Set();
+  (data.party || []).forEach((p) => { if (p && p.name) charNames.add(p.name); });
+  (data.turns || []).forEach((t) => {
+    Object.values(t.columns || {}).forEach((entries) => {
+      (entries || []).forEach((e) => {
+        if (e && e.character && (e.wonderPersonaIndex === undefined || e.wonderPersonaIndex === -1)) {
+          charNames.add(e.character);
+        }
+      });
+    });
+  });
+  LUFEL_CHAR_NAMES = [...charNames];
+  LUFEL_PERSONA_NAMES = (data.wonder?.personas || []).map((p) => p?.name).filter(Boolean);
+
+  renderLufelMapping();
+  document.getElementById("lufel-modal").classList.remove("hidden");
+}
+
+function renderLufelMapping() {
+  const box = document.getElementById("lufel-mapping-body");
+  let html = "";
+
+  if (LUFEL_CHAR_NAMES.length) {
+    html += `<h4 style="margin:10px 0; font-family:var(--f-mono); text-transform:uppercase; font-size:12px; color:var(--bone-dim);">Personajes</h4>`;
+    LUFEL_CHAR_NAMES.forEach((name) => {
+      html += `
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+          <span class="mono" style="flex:0 0 130px; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(name)}</span>
+          <select data-lufel-char="${escapeHtml(name)}" style="flex:1;">
+            <option value="">— Omitir —</option>
+            ${ROSTER.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("")}
+          </select>
+        </div>
+      `;
+    });
+  }
+
+  if (LUFEL_PERSONA_NAMES.length) {
+    html += `<h4 style="margin:16px 0 10px; font-family:var(--f-mono); text-transform:uppercase; font-size:12px; color:var(--bone-dim);">Personas de Wonder</h4>`;
+    LUFEL_PERSONA_NAMES.forEach((name) => {
+      html += `
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+          <span class="mono" style="flex:0 0 130px; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(name)}</span>
+          <select data-lufel-persona="${escapeHtml(name)}" style="flex:1;">
+            <option value="">— Omitir —</option>
+            ${PERSONAS.map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
+          </select>
+        </div>
+      `;
+    });
+  }
+
+  box.innerHTML = html || `<p class="dim">No se han detectado nombres en el archivo.</p>`;
+}
+
+function translateLufelAction(raw) {
+  let label = raw || "";
+  let tag = null;
+  if (label.trim().toUpperCase() === "HIGHLIGHT") {
+    tag = "hl";
+    label = "Highlight";
+  } else if (LUFEL_ACTION_DICT[label]) {
+    label = LUFEL_ACTION_DICT[label];
+  }
+  return { label, tag };
+}
+
+function applyLufelImport() {
+  const data = LUFEL_DATA;
+  if (!data) return;
+
+  const charMap = {};
+  document.querySelectorAll("[data-lufel-char]").forEach((s) => {
+    if (s.value) charMap[s.dataset.lufelChar] = s.value;
+  });
+  const personaMap = {};
+  document.querySelectorAll("[data-lufel-persona]").forEach((s) => {
+    if (s.value) personaMap[s.dataset.lufelPersona] = s.value;
+  });
+
+  const wonderChar = ROSTER.find((c) => isWonderCharacter(c));
+
+  EDITING_ROTATION_ID = null;
+  document.getElementById("rot-title").value = data.title || "";
+  document.getElementById("rot-notes").value = data.memo || "";
+  document.getElementById("wonder-knife").value = data.wonder?.weapon || "";
+
+  COLUMN_COUNT = 5;
+  const partyByOrder = {};
+  (data.party || []).forEach((p) => {
+    if (!p) return;
+    const ord = parseInt(p.order, 10);
+    if (ord >= 1 && ord <= 4) partyByOrder[ord] = p.name;
+  });
+  const columnCharIds = [1, 2, 3, 4].map((n) => {
+    const name = partyByOrder[n];
+    return name && charMap[name] ? charMap[name] : "";
+  });
+  columnCharIds.push(wonderChar ? wonderChar.id : "");
+
+  TURNS = (data.turns || []).map((t) => {
+    const cells = [[], [], [], [], []];
+    Object.entries(t.columns || {}).forEach(([key, entries]) => {
+      (entries || []).forEach((e) => {
+        if (!e) return;
+        const isWonderEntry = e.wonderPersonaIndex !== undefined && e.wonderPersonaIndex !== -1;
+        const { label, tag } = translateLufelAction(e.action);
+        const finalLabel = e.mikuMusic ? `${label} (${e.mikuMusic})` : label;
+
+        if (isWonderEntry) {
+          const personaId = e.wonderPersona ? personaMap[e.wonderPersona] : null;
+          cells[4].push({
+            id: uid(),
+            characterId: wonderChar ? wonderChar.id : "",
+            actionLabel: finalLabel,
+            tag,
+            personaId: personaId || null,
+          });
+        } else {
+          const colIdx = key === "mystery" ? 4 : parseInt(key, 10) - 1;
+          if (colIdx < 0 || colIdx > 4) return;
+          const charId = e.character ? charMap[e.character] : "";
+          cells[colIdx].push({
+            id: uid(),
+            characterId: charId || "",
+            actionLabel: finalLabel,
+            tag,
+            personaId: null,
+          });
+        }
+      });
+    });
+    return { tag: null, cells };
+  });
+
+  WONDER_PERSONAS = (data.wonder?.personas || []).slice(0, 3).map((p) => {
+    if (!p || !p.name || !personaMap[p.name]) return null;
+    const firstSkill = (p.skills || []).find((s) => s);
+    return { personaId: personaMap[p.name], skillLabel: firstSkill || "" };
+  });
+  while (WONDER_PERSONAS.length < 3) WONDER_PERSONAS.push(null);
+
+  renderColumnSelectors();
+  document.querySelectorAll(".col-select").forEach((s, i) => {
+    if (columnCharIds[i]) s.value = columnCharIds[i];
+  });
+
+  renderTurns();
+  renderWonderPersonaSlots();
+
+  document.getElementById("lufel-modal").classList.add("hidden");
+  document.getElementById("save-status").textContent =
+    "Importado desde Lufel — revísalo y dale a \"Guardar rotación\".";
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("add-turn-btn").addEventListener("click", addTurn);
   document.getElementById("save-rotation-btn").addEventListener("click", saveRotation);
@@ -775,6 +957,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (e.target.files[0]) importRotationJSON(e.target.files[0]);
     e.target.value = "";
   });
+  document.getElementById("import-lufel-input").addEventListener("change", (e) => {
+    if (e.target.files[0]) handleLufelFile(e.target.files[0]);
+    e.target.value = "";
+  });
+  document.getElementById("lufel-close-btn").addEventListener("click", () => {
+    document.getElementById("lufel-modal").classList.add("hidden");
+  });
+  document.getElementById("lufel-confirm-btn").addEventListener("click", applyLufelImport);
 
   await loadAllActions();
   await loadRosterAndBosses();
@@ -786,6 +976,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (editId) {
     await loadRotationForEdit(editId);
   } else {
-    addTurn();
+    for (let i = 0; i < 6; i++) addTurn();
   }
 });

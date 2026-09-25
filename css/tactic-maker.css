@@ -66,7 +66,7 @@
   background: var(--panel);
   border: 1px solid var(--line);
   border-top: 3px solid var(--static);
-  min-width: 230px;
+  min-width: 165px;
 }
 .turn-cell.col-highlight-head {
   border-top-color: var(--red);
@@ -107,8 +107,8 @@
   flex-shrink: 0;
 }
 .tag-dot {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.25);
   padding: 0;

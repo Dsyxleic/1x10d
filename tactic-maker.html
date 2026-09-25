@@ -94,6 +94,10 @@
           Importar archivo
           <input type="file" id="import-json-input" accept="application/json" style="display:none;" />
         </label>
+        <label class="btn btn-ghost" for="import-lufel-input" style="cursor:pointer;">
+          Importar desde Lufel
+          <input type="file" id="import-lufel-input" accept="application/json" style="display:none;" />
+        </label>
         <span id="save-status" class="dim"></span>
       </div>
     </div>
@@ -110,6 +114,22 @@
     </div>
     <div id="export-target"></div>
     <button class="btn btn-primary" id="download-img-btn" style="margin-top:14px;">Descargar como imagen</button>
+  </div>
+</div>
+
+<!-- Mapeo de nombres al importar desde Lufel -->
+<div id="lufel-modal" class="modal-backdrop hidden">
+  <div class="modal panel" style="max-width:560px;">
+    <div class="modal-head">
+      <h3>Importar desde Lufel</h3>
+      <button class="btn btn-ghost" id="lufel-close-btn">Cerrar</button>
+    </div>
+    <p class="dim" style="margin-bottom:14px; font-size:13px;">
+      El archivo tiene los nombres en otro idioma. Dinos a qué personaje o persona de tu roster corresponde cada uno — solo hace falta hacerlo una vez por nombre.
+    </p>
+    <div id="lufel-mapping-body"></div>
+    <button class="btn btn-primary" id="lufel-confirm-btn" style="margin-top:16px;">Importar rotación</button>
+    <span id="lufel-status" class="dim" style="margin-left:10px; font-size:13px;"></span>
   </div>
 </div>
 

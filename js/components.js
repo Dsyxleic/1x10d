@@ -6,9 +6,8 @@ function renderHeader(activePage) {
     { href: "index.html", ch: "01", label: "Inicio", key: "home" },
     { href: "tactic-maker.html", ch: "02", label: "Constructor", key: "maker" },
     { href: "library.html", ch: "03", label: "Biblioteca", key: "library" },
-    { href: "build.html", ch: "04", label: "Build", key: "build" },
-    { href: "notes.html", ch: "05", label: "Notas", key: "notes" },
-    { href: "settings.html", ch: "06", label: "Ajustes", key: "settings" },
+    { href: "notes.html", ch: "04", label: "Notas", key: "notes" },
+    { href: "settings.html", ch: "05", label: "Ajustes", key: "settings" },
   ];
 
   el.innerHTML = `
