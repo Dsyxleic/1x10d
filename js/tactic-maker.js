@@ -442,6 +442,9 @@ function renderEntryRow(entry, columnCharId) {
     }
   }
 
+  const footRow = document.createElement("div");
+  footRow.className = "entry-row-foot";
+
   const tagsWrap = document.createElement("div");
   tagsWrap.className = "tag-dots";
   TAG_DEFS.forEach((t) => {
@@ -469,9 +472,10 @@ function renderEntryRow(entry, columnCharId) {
     renderTurns();
   };
 
-  bottomRow.appendChild(tagsWrap);
-  bottomRow.appendChild(delBtn);
+  footRow.appendChild(tagsWrap);
+  footRow.appendChild(delBtn);
   div.appendChild(bottomRow);
+  div.appendChild(footRow);
 
   return div;
 }
