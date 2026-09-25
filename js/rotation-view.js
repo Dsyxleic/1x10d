@@ -83,6 +83,41 @@ async function loadRotation() {
   const charMap = {};
   (chars || []).forEach((c) => (charMap[c.id] = c));
 
+  if (allCharIds.size) {
+    const { data: charNotes } = await sb.from("notes").select("*").in("character_id", [...allCharIds]);
+    const notesByChar = {};
+    (charNotes || []).forEach((n) => {
+      if (!notesByChar[n.character_id]) notesByChar[n.character_id] = [];
+      notesByChar[n.character_id].push(n);
+    });
+
+    const charsWithNotes = [...allCharIds].filter((id) => notesByChar[id]?.length);
+    if (charsWithNotes.length) {
+      document.getElementById("rv-char-notes").classList.remove("hidden");
+      document.getElementById("rv-char-notes").innerHTML = `
+        <strong>Notas de personajes</strong>
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:12px;">
+          ${charsWithNotes
+            .map((id) => {
+              const c = charMap[id];
+              const list = notesByChar[id];
+              return `
+                <div>
+                  <div style="font-family:var(--f-mono); font-size:12px; color:var(--red-glow); margin-bottom:4px;">
+                    ${c && c.avatar_url ? `<img src="${c.avatar_url}" class="th-avatar" />` : ""}${escapeHtml(c ? c.name : "")}
+                  </div>
+                  ${list
+                    .map((n) => `<div style="font-size:13px; margin-bottom:6px;"><em>${escapeHtml(n.title || "Sin título")}</em>${n.content ? " — " + escapeHtml(n.content) : ""}</div>`)
+                    .join("")}
+                </div>
+              `;
+            })
+            .join("")}
+        </div>
+      `;
+    }
+  }
+
   let entryPersonaMap = {};
   if (allPersonaIds.size) {
     const { data: entryPersonas } = await sb.from("personas").select("*").in("id", [...allPersonaIds]);

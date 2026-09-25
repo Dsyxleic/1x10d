@@ -34,6 +34,12 @@
           <button class="btn btn-ghost" id="new-folder-btn">+ Carpeta</button>
           <button class="btn btn-primary" id="new-note-btn">+ Nota</button>
         </div>
+        <div style="margin-bottom:14px;">
+          <label>Notas de un personaje</label>
+          <select id="character-filter-select" style="width:100%; margin-top:4px;">
+            <option value="">— Todas las notas —</option>
+          </select>
+        </div>
         <div id="folder-tree"></div>
       </div>
 
@@ -45,6 +51,7 @@
           <div class="editor-toolbar">
             <input id="note-title" placeholder="Título de la nota" />
             <select id="note-folder-select"></select>
+            <select id="note-character-select"></select>
             <button class="btn btn-ghost" id="delete-note-btn">Eliminar</button>
           </div>
           <textarea id="note-content" placeholder="Escribe aquí…"></textarea>

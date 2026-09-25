@@ -1,4 +1,5 @@
 let CHAR_CACHE = [];
+let CHAR_SORT_MODE = "custom";
 
 async function loadCharacters() {
   const grid = document.getElementById("character-grid");
@@ -13,19 +14,40 @@ async function loadCharacters() {
   }
 
   CHAR_CACHE = data || [];
+  renderCharacterGrid();
+}
+
+function sortedChars() {
+  const list = [...CHAR_CACHE];
+  if (CHAR_SORT_MODE === "name") {
+    list.sort((a, b) => a.name.localeCompare(b.name, "es"));
+  } else if (CHAR_SORT_MODE === "element") {
+    list.sort((a, b) => {
+      const ea = a.element || "zzz";
+      const eb = b.element || "zzz";
+      if (ea !== eb) return ea.localeCompare(eb);
+      return a.name.localeCompare(b.name, "es");
+    });
+  }
+  return list;
+}
+
+function renderCharacterGrid() {
+  const grid = document.getElementById("character-grid");
 
   if (CHAR_CACHE.length === 0) {
     grid.innerHTML = `<p class="dim">Todavía no hay personajes. Añade el primero arriba.</p>`;
     return;
   }
 
-  grid.innerHTML = CHAR_CACHE
+  grid.innerHTML = sortedChars()
     .map(
       (c) => `
       <div class="char-card panel" data-id="${c.id}" style="--card-accent:${c.color_bg};">
         <div class="char-card-img" data-link-target="${c.link_url ? escapeHtml(c.link_url) : ""}">
           ${c.avatar_url ? `<img src="${c.avatar_url}" alt="${escapeHtml(c.name)}" />` : `<span class="no-img">Sin imagen</span>`}
           ${c.link_url ? `<span class="link-badge" title="Tiene link externo">🔗</span>` : ""}
+          ${c.element ? `<span style="position:absolute; top:6px; left:6px;">${elementBadge(c.element, 22)}</span>` : ""}
         </div>
         <div class="char-card-body">
           <div class="char-card-name">${escapeHtml(c.name)}</div>
@@ -348,6 +370,14 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("add-character-panel").classList.toggle("hidden");
   });
   document.getElementById("save-character-btn").addEventListener("click", saveNewCharacter);
+
+  document.querySelectorAll("#char-sort-toggle .chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      CHAR_SORT_MODE = btn.dataset.sort;
+      document.querySelectorAll("#char-sort-toggle .chip").forEach((b) => b.classList.toggle("is-active", b === btn));
+      renderCharacterGrid();
+    });
+  });
 
   MenheraAuth.onChange(() => loadCharacters());
 });

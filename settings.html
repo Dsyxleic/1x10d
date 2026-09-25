@@ -23,7 +23,7 @@
   <div class="wrap">
     <div class="eyebrow">Canal 08</div>
     <h1>Ajustes</h1>
-    <p>Centro de mando: personajes, personas e iconos de elementos, todo desde un solo sitio.</p>
+    <p>Centro de mando: personajes, personas y jefes, todo desde un solo sitio.</p>
   </div>
 </section>
 
@@ -33,7 +33,7 @@
     <div class="settings-tabs">
       <button class="settings-tab is-active" data-tab="personajes">Personajes</button>
       <button class="settings-tab" data-tab="personas">Personas</button>
-      <button class="settings-tab" data-tab="elementos">Elementos</button>
+      <button class="settings-tab" data-tab="jefes">Jefes</button>
     </div>
 
     <!-- personajes -->
@@ -91,9 +91,16 @@
         <span id="char-save-status" class="dim" style="margin-left:12px; font-size:13px;"></span>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; margin:24px 0 14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin:24px 0 14px; flex-wrap:wrap; gap:10px;">
         <h3>Roster</h3>
-        <button class="btn btn-ghost" id="toggle-add-btn">+ Nuevo personaje</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <div class="sort-toggle" id="char-sort-toggle">
+            <button class="chip is-active" data-sort="custom">Personalizado</button>
+            <button class="chip" data-sort="name">A-Z</button>
+            <button class="chip" data-sort="element">Elemento</button>
+          </div>
+          <button class="btn btn-ghost" id="toggle-add-btn">+ Nuevo personaje</button>
+        </div>
       </div>
 
       <div id="character-grid" class="character-grid">
@@ -112,6 +119,30 @@
             <input id="new-persona-name" />
           </div>
           <div>
+            <label>Elemento</label>
+            <select id="new-persona-element">
+              <option value="">— Sin especificar —</option>
+              <option value="physical">Physical</option>
+              <option value="gun">Gun</option>
+              <option value="fire">Fire</option>
+              <option value="ice">Ice</option>
+              <option value="electric">Electric</option>
+              <option value="wind">Wind</option>
+              <option value="psychokinesis">Psychokinesis</option>
+              <option value="nuclear">Nuclear</option>
+              <option value="bless">Bless</option>
+              <option value="curse">Curse</option>
+            </select>
+          </div>
+          <div>
+            <label>Color de fondo</label>
+            <input id="new-persona-color-bg" type="color" value="#1c1a20" />
+          </div>
+          <div>
+            <label>Color de texto</label>
+            <input id="new-persona-color-text" type="color" value="#f1ece7" />
+          </div>
+          <div>
             <label>Imagen</label>
             <input id="new-persona-image" type="file" accept="image/*" />
           </div>
@@ -124,9 +155,16 @@
         <span id="persona-save-status" class="dim" style="margin-left:12px; font-size:13px;"></span>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; margin:24px 0 14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin:24px 0 14px; flex-wrap:wrap; gap:10px;">
         <h3>Roster de personas</h3>
-        <button class="btn btn-ghost" id="toggle-add-persona-btn">+ Nueva persona</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <div class="sort-toggle" id="persona-sort-toggle">
+            <button class="chip is-active" data-sort="custom">Personalizado</button>
+            <button class="chip" data-sort="name">A-Z</button>
+            <button class="chip" data-sort="element">Elemento</button>
+          </div>
+          <button class="btn btn-ghost" id="toggle-add-persona-btn">+ Nueva persona</button>
+        </div>
       </div>
 
       <div id="persona-grid" class="character-grid">
@@ -134,11 +172,26 @@
       </div>
     </div>
 
-    <!-- elementos -->
-    <div class="settings-panel" data-panel="elementos">
-      <div id="icon-settings-grid" class="icon-settings-grid">
-        <p class="dim">Cargando…</p>
+    <!-- jefes -->
+    <div class="settings-panel" data-panel="jefes">
+      <div class="panel add-character-panel">
+        <h3 style="margin-bottom:14px;">Añadir jefe</h3>
+        <div class="add-grid">
+          <div>
+            <label>Nombre</label>
+            <input id="new-boss-name" />
+          </div>
+          <div>
+            <label>Color</label>
+            <input id="new-boss-color" type="color" value="#7a1518" />
+          </div>
+        </div>
+        <button class="btn btn-primary" id="save-boss-btn" style="margin-top:14px;">Guardar jefe</button>
+        <span id="boss-save-status" class="dim" style="margin-left:12px; font-size:13px;"></span>
       </div>
+
+      <h3 style="margin:24px 0 14px;">Jefes</h3>
+      <div id="boss-list"></div>
     </div>
 
   </div>
@@ -181,6 +234,7 @@
 <script src="js/icons.js"></script>
 <script src="js/characters.js"></script>
 <script src="js/personas.js"></script>
+<script src="js/bosses.js"></script>
 <script src="js/settings.js"></script>
 <script>mountChrome('settings');</script>
 </body>

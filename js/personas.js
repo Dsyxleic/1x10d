@@ -1,4 +1,5 @@
 let PERSONA_CACHE = [];
+let PERSONA_SORT_MODE = "custom";
 
 function escapeHtmlP(s) {
   return (s || "").replace(/[&<>"']/g, (c) => ({
@@ -16,19 +17,40 @@ async function loadPersonas() {
   }
 
   PERSONA_CACHE = data || [];
+  renderPersonaGrid();
+}
+
+function sortedPersonas() {
+  const list = [...PERSONA_CACHE];
+  if (PERSONA_SORT_MODE === "name") {
+    list.sort((a, b) => a.name.localeCompare(b.name, "es"));
+  } else if (PERSONA_SORT_MODE === "element") {
+    list.sort((a, b) => {
+      const ea = a.element || "zzz";
+      const eb = b.element || "zzz";
+      if (ea !== eb) return ea.localeCompare(eb);
+      return a.name.localeCompare(b.name, "es");
+    });
+  }
+  return list;
+}
+
+function renderPersonaGrid() {
+  const grid = document.getElementById("persona-grid");
 
   if (PERSONA_CACHE.length === 0) {
     grid.innerHTML = `<p class="dim">Todavía no hay personas. Añade la primera arriba.</p>`;
     return;
   }
 
-  grid.innerHTML = PERSONA_CACHE
+  grid.innerHTML = sortedPersonas()
     .map(
       (p) => `
-      <div class="char-card panel" data-id="${p.id}">
+      <div class="char-card panel" data-id="${p.id}" style="--card-accent:${p.color_bg || "#1c1a20"};">
         <div class="char-card-img" data-link-target="${p.link_url ? escapeHtmlP(p.link_url) : ""}">
           ${p.avatar_url ? `<img src="${p.avatar_url}" alt="${escapeHtmlP(p.name)}" />` : `<span class="no-img">Sin imagen</span>`}
           ${p.link_url ? `<span class="link-badge" title="Tiene link externo">🔗</span>` : ""}
+          ${p.element ? `<span style="position:absolute; top:6px; left:6px;">${elementBadge(p.element, 22)}</span>` : ""}
         </div>
         <div class="char-card-body">
           <div class="char-card-name">${escapeHtmlP(p.name)}</div>
@@ -56,6 +78,9 @@ async function loadPersonas() {
 async function saveNewPersona() {
   const statusEl = document.getElementById("persona-save-status");
   const name = document.getElementById("new-persona-name").value.trim();
+  const element = document.getElementById("new-persona-element").value;
+  const colorBg = document.getElementById("new-persona-color-bg").value;
+  const colorText = document.getElementById("new-persona-color-text").value;
   const linkUrl = document.getElementById("new-persona-link").value.trim();
   const fileInput = document.getElementById("new-persona-image");
 
@@ -81,6 +106,9 @@ async function saveNewPersona() {
 
   const { error } = await sb.from("personas").insert({
     name,
+    element: element || null,
+    color_bg: colorBg,
+    color_text: colorText,
     avatar_url: avatarUrl,
     link_url: linkUrl || null,
     sort_order: PERSONA_CACHE.length,
@@ -95,6 +123,7 @@ async function saveNewPersona() {
 
   statusEl.textContent = "Guardado ✓";
   document.getElementById("new-persona-name").value = "";
+  document.getElementById("new-persona-element").value = "";
   document.getElementById("new-persona-link").value = "";
   fileInput.value = "";
   await loadPersonas();
@@ -147,6 +176,30 @@ async function openPersonaModal(id) {
           <div>
             <label>Nombre</label>
             <input id="edit-persona-name" value="${escapeHtmlP(p.name)}" />
+          </div>
+          <div>
+            <label>Elemento</label>
+            <select id="edit-persona-element">
+              <option value="">— Sin especificar —</option>
+              <option value="physical" ${p.element === "physical" ? "selected" : ""}>Physical</option>
+              <option value="gun" ${p.element === "gun" ? "selected" : ""}>Gun</option>
+              <option value="fire" ${p.element === "fire" ? "selected" : ""}>Fire</option>
+              <option value="ice" ${p.element === "ice" ? "selected" : ""}>Ice</option>
+              <option value="electric" ${p.element === "electric" ? "selected" : ""}>Electric</option>
+              <option value="wind" ${p.element === "wind" ? "selected" : ""}>Wind</option>
+              <option value="psychokinesis" ${p.element === "psychokinesis" ? "selected" : ""}>Psychokinesis</option>
+              <option value="nuclear" ${p.element === "nuclear" ? "selected" : ""}>Nuclear</option>
+              <option value="bless" ${p.element === "bless" ? "selected" : ""}>Bless</option>
+              <option value="curse" ${p.element === "curse" ? "selected" : ""}>Curse</option>
+            </select>
+          </div>
+          <div>
+            <label>Color de fondo</label>
+            <input id="edit-persona-color-bg" type="color" value="${p.color_bg || "#1c1a20"}" />
+          </div>
+          <div>
+            <label>Color de texto</label>
+            <input id="edit-persona-color-text" type="color" value="${p.color_text || "#f1ece7"}" />
           </div>
           <div>
             <label>Reemplazar imagen</label>
@@ -203,6 +256,9 @@ async function openPersonaModal(id) {
 
       const payload = {
         name,
+        element: document.getElementById("edit-persona-element").value || null,
+        color_bg: document.getElementById("edit-persona-color-bg").value,
+        color_text: document.getElementById("edit-persona-color-text").value,
         link_url: document.getElementById("edit-persona-link-url").value.trim() || null,
       };
 
@@ -294,6 +350,14 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("add-persona-panel").classList.toggle("hidden");
   });
   document.getElementById("save-persona-btn").addEventListener("click", saveNewPersona);
+
+  document.querySelectorAll("#persona-sort-toggle .chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      PERSONA_SORT_MODE = btn.dataset.sort;
+      document.querySelectorAll("#persona-sort-toggle .chip").forEach((b) => b.classList.toggle("is-active", b === btn));
+      renderPersonaGrid();
+    });
+  });
 
   MenheraAuth.onChange(() => loadPersonas());
 });

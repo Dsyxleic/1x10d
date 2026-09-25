@@ -135,6 +135,55 @@ function renderWonderPersonaSlots() {
 
     box.appendChild(div);
   }
+
+  refreshCharNotesPanel();
+}
+
+async function refreshCharNotesPanel() {
+  const panel = document.getElementById("maker-char-notes");
+  if (!panel) return;
+
+  const charIds = [...new Set(getColumnAssignments().filter(Boolean))];
+  if (charIds.length === 0) {
+    panel.classList.add("hidden");
+    return;
+  }
+
+  const { data: charNotes } = await sb.from("notes").select("*").in("character_id", charIds);
+  const notesByChar = {};
+  (charNotes || []).forEach((n) => {
+    if (!notesByChar[n.character_id]) notesByChar[n.character_id] = [];
+    notesByChar[n.character_id].push(n);
+  });
+
+  const charsWithNotes = charIds.filter((id) => notesByChar[id]?.length);
+  if (charsWithNotes.length === 0) {
+    panel.classList.add("hidden");
+    return;
+  }
+
+  panel.classList.remove("hidden");
+  panel.innerHTML = `
+    <strong>Notas de personajes</strong>
+    <div style="margin-top:10px; display:flex; flex-direction:column; gap:12px;">
+      ${charsWithNotes
+        .map((id) => {
+          const c = ROSTER.find((x) => x.id === id);
+          const list = notesByChar[id];
+          return `
+            <div>
+              <div style="font-family:var(--f-mono); font-size:12px; color:var(--red-glow); margin-bottom:4px;">
+                ${c && c.avatar_url ? `<img src="${c.avatar_url}" class="th-avatar" />` : ""}${escapeHtml(c ? c.name : "")}
+              </div>
+              ${list
+                .map((n) => `<div style="font-size:13px; margin-bottom:6px;"><em>${escapeHtml(n.title || "Sin título")}</em>${n.content ? " — " + escapeHtml(n.content) : ""}</div>`)
+                .join("")}
+            </div>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
 }
 
 function renderColumnSelectors() {
@@ -351,7 +400,14 @@ function renderEntryRow(entry, columnCharId) {
   const charSelect = document.createElement("select");
   charSelect.className = "entry-char-select";
   charSelect.title = "Personaje de esta acción";
-  charSelect.innerHTML = ROSTER.map(
+  const rotationCharIds = [...new Set(getColumnAssignments().filter(Boolean))];
+  const selectableChars = ROSTER.filter((c) => rotationCharIds.includes(c.id));
+  // por si el personaje actual de esta acción ya no está entre los elegidos arriba
+  if (effectiveCharId && !rotationCharIds.includes(effectiveCharId)) {
+    const extra = ROSTER.find((c) => c.id === effectiveCharId);
+    if (extra) selectableChars.push(extra);
+  }
+  charSelect.innerHTML = selectableChars.map(
     (c) => `<option value="${c.id}" ${effectiveCharId === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`
   ).join("");
   charSelect.onchange = () => {

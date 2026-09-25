@@ -1,5 +1,6 @@
 let ALL_ROTATIONS = [];
 let BOSS_MAP = {};
+let BOSS_COLOR_MAP = {};
 let CHAR_MAP = {};
 let CHAR_AVATAR_MAP = {};
 let MODE_MAP = {};
@@ -19,7 +20,10 @@ async function loadLibrary() {
   ]);
 
   ALL_ROTATIONS = rotations || [];
-  (bosses || []).forEach((b) => (BOSS_MAP[b.id] = b.name));
+  (bosses || []).forEach((b) => {
+    BOSS_MAP[b.id] = b.name;
+    BOSS_COLOR_MAP[b.id] = b.color || "#7a1518";
+  });
   (chars || []).forEach((c) => {
     CHAR_MAP[c.id] = c.name;
     CHAR_AVATAR_MAP[c.id] = c.avatar_url;
@@ -80,8 +84,9 @@ function renderList() {
             )
             .join("")}</div>`
         : "";
+      const bossColor = r.boss_id ? BOSS_COLOR_MAP[r.boss_id] : null;
       return `
-        <div class="rotation-card panel">
+        <div class="rotation-card panel" style="${bossColor ? `border-left-color:${bossColor};` : ""}">
           <div class="rotation-card-title">${escapeHtml(r.title)}</div>
           ${compHtml}
           <div class="rotation-card-meta">
