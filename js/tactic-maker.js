@@ -775,6 +775,7 @@ async function importRotationJSON(file) {
 let LUFEL_DATA = null;
 let LUFEL_CHAR_NAMES = [];
 let LUFEL_PERSONA_NAMES = [];
+let LUFEL_CHAR_HINTS = {}; // name -> { order, nature }
 
 const LUFEL_ACTION_DICT = {
   "스킬1": "Skill 1",
@@ -811,8 +812,23 @@ async function handleLufelFile(file) {
   LUFEL_CHAR_NAMES = [...charNames];
   LUFEL_PERSONA_NAMES = (data.wonder?.personas || []).map((p) => p?.name).filter(Boolean);
 
+  LUFEL_CHAR_HINTS = {};
+  (data.party || []).forEach((p) => {
+    if (p && p.name) {
+      LUFEL_CHAR_HINTS[p.name] = {
+        order: p.order && p.order !== "-" ? p.order : null,
+        nature: p.natureSkill?.nature || null,
+      };
+    }
+  });
+
   renderLufelMapping();
   document.getElementById("lufel-modal").classList.remove("hidden");
+}
+
+function lufelTranslateLink(name) {
+  const url = `https://translate.google.com/?sl=auto&tl=es&text=${encodeURIComponent(name)}&op=translate`;
+  return `<a href="${url}" target="_blank" rel="noopener" class="mono" style="font-size:11px;">Traducir ↗</a>`;
 }
 
 function renderLufelMapping() {
@@ -822,10 +838,20 @@ function renderLufelMapping() {
   if (LUFEL_CHAR_NAMES.length) {
     html += `<h4 style="margin:10px 0; font-family:var(--f-mono); text-transform:uppercase; font-size:12px; color:var(--bone-dim);">Personajes</h4>`;
     LUFEL_CHAR_NAMES.forEach((name) => {
+      const hint = LUFEL_CHAR_HINTS[name];
+      const hintParts = [];
+      if (hint?.order) hintParts.push(`Columna ${hint.order}`);
+      if (hint?.nature) hintParts.push(hint.nature);
       html += `
-        <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
-          <span class="mono" style="flex:0 0 130px; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(name)}</span>
-          <select data-lufel-char="${escapeHtml(name)}" style="flex:1;">
+        <div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--line);">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:6px;">
+            <span>
+              <span class="mono">${escapeHtml(name)}</span>
+              ${hintParts.length ? `<span class="badge" style="margin-left:8px;">${escapeHtml(hintParts.join(" · "))}</span>` : ""}
+            </span>
+            ${lufelTranslateLink(name)}
+          </div>
+          <select data-lufel-char="${escapeHtml(name)}" style="width:100%;">
             <option value="">— Omitir —</option>
             ${ROSTER.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("")}
           </select>
@@ -838,9 +864,12 @@ function renderLufelMapping() {
     html += `<h4 style="margin:16px 0 10px; font-family:var(--f-mono); text-transform:uppercase; font-size:12px; color:var(--bone-dim);">Personas de Wonder</h4>`;
     LUFEL_PERSONA_NAMES.forEach((name) => {
       html += `
-        <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
-          <span class="mono" style="flex:0 0 130px; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(name)}</span>
-          <select data-lufel-persona="${escapeHtml(name)}" style="flex:1;">
+        <div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--line);">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:6px;">
+            <span class="mono">${escapeHtml(name)}</span>
+            ${lufelTranslateLink(name)}
+          </div>
+          <select data-lufel-persona="${escapeHtml(name)}" style="width:100%;">
             <option value="">— Omitir —</option>
             ${PERSONAS.map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
           </select>
