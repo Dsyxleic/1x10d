@@ -54,7 +54,7 @@ async function loadRotation() {
     document.getElementById("rv-screenshot").classList.remove("hidden");
     document.getElementById("rv-screenshot").innerHTML = `
       <strong>Captura de resultado</strong>
-      <div style="margin-top:8px;"><img src="${r.screenshot_url}" style="max-width:100%; border-radius:6px; border:1px solid var(--line);" /></div>
+      <div style="margin-top:8px;"><img src="${r.screenshot_url}" style="max-width:320px; max-height:400px; object-fit:contain; border-radius:6px; border:1px solid var(--line);" /></div>
     `;
   }
 
@@ -159,7 +159,7 @@ async function loadRotation() {
   let html = `<table class="export-table" style="width:100%;">
     <colgroup>
       <col class="export-turn-th" />
-      ${grid.columns.map(() => `<col style="width:${colWidthPct}%;" />`).join("")}
+      ${grid.columns.map(() => `<col style="width:${colWidthPct}%;" /><col class="export-hl-col" />`).join("")}
     </colgroup>
     <thead><tr>
       <th class="export-turn-th"></th>
@@ -168,7 +168,7 @@ async function loadRotation() {
       return `<th style="background:${c ? c.color_bg : "#2c1f21"}; color:${c ? c.color_text : "#efe6dd"}">
         ${c && c.avatar_url ? `<img src="${c.avatar_url}" class="th-avatar" />` : ""}
         ${c ? escapeHtml(c.name) : "—"}
-      </th>`;
+      </th><th class="export-hl-th">HL</th>`;
     }).join("")}</tr></thead>
     <tbody>`;
 
@@ -183,30 +183,30 @@ async function loadRotation() {
     turn.cells.forEach((cell, colIdx) => {
       const columnCharId = grid.columns[colIdx];
       if (cell.length === 0) {
-        html += `<td></td>`;
+        html += `<td></td><td class="export-hl-td"></td>`;
         return;
       }
-      const actionsHtml = cell
-        .map((entry) => {
-          const color = entry?.color || (entry?.tag ? TAG_COLORS[entry.tag] : null);
-          const lineStyle = color ? `background:${hexToRgbaRV(color, 0.55)}; color:#17151b; font-weight:700;` : "";
-          const entryCharId = entry.characterId || columnCharId;
-          const entryChar = charMap[entryCharId];
-          const isWonderEntry = entryChar && entryChar.name.trim().toLowerCase() === "wonder";
-          const showAvatar = isWonderEntry || entryCharId !== columnCharId;
-          const avatarSrc = isWonderEntry ? entryPersonaMap[entry.personaId]?.avatar_url : entryChar?.avatar_url;
-          const avatarImg = showAvatar && avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
-          let skillIconUrl = null;
-          if (entry.actionLabel) {
-            skillIconUrl = isWonderEntry
-              ? personaSkillIconMap[`${entry.personaId}||${entry.actionLabel}`]
-              : actionIconMap[`${entryChar?.id}||${entry.actionLabel}`];
-          }
-          const skillIconImg = skillIconUrl ? `<img src="${skillIconUrl}" class="td-skill-icon" />` : "";
-          return `<div class="cell-action" style="${lineStyle}">${avatarImg}${skillIconImg}${escapeHtml(entry.actionLabel || "")}</div>`;
-        })
-        .join("");
-      html += `<td>${actionsHtml}</td>`;
+      let actionsHtml = "";
+      let hlHtml = "";
+      cell.forEach((entry) => {
+        const color = entry?.color || (entry?.tag ? TAG_COLORS[entry.tag] : null);
+        const entryCharId = entry.characterId || columnCharId;
+        const entryChar = charMap[entryCharId];
+        const isWonderEntry = entryChar && entryChar.name.trim().toLowerCase() === "wonder";
+        const showAvatar = isWonderEntry || entryCharId !== columnCharId;
+        const avatarSrc = isWonderEntry ? entryPersonaMap[entry.personaId]?.avatar_url : entryChar?.avatar_url;
+        const avatarImg = showAvatar && avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
+        let skillIconUrl = null;
+        if (entry.actionLabel) {
+          skillIconUrl = isWonderEntry
+            ? personaSkillIconMap[`${entry.personaId}||${entry.actionLabel}`]
+            : actionIconMap[`${entryChar?.id}||${entry.actionLabel}`];
+        }
+        const skillIconImg = skillIconUrl ? `<img src="${skillIconUrl}" class="td-skill-icon" />` : "";
+        actionsHtml += `<div class="cell-action">${avatarImg}${skillIconImg}${escapeHtml(entry.actionLabel || "")}</div>`;
+        hlHtml += `<div class="cell-hl" style="${color ? `background:${color};` : ""}"></div>`;
+      });
+      html += `<td>${actionsHtml}</td><td class="export-hl-td">${hlHtml}</td>`;
     });
 
     html += "</tr>";

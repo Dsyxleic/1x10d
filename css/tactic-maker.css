@@ -364,6 +364,19 @@
 .cell-action:not(:last-child) {
   border-bottom: 1px solid #e4e1e7;
 }
+.export-hl-col { width: 34px; }
+.export-hl-th {
+  width: 34px;
+  text-align: center;
+  font-size: 11px;
+  color: #5c5866;
+}
+.export-hl-td { padding: 0; }
+.cell-hl {
+  min-height: 30px;
+  border-bottom: 1px solid #e4e1e7;
+}
+.cell-hl:last-child { border-bottom: none; }
 
 @media (max-width: 900px) {
   .turn-row { grid-template-columns: 1fr; }

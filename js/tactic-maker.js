@@ -708,7 +708,7 @@ function renderExportPreview() {
     <table class="export-table">
       <colgroup>
         <col class="export-turn-th" />
-        ${assignments.map(() => `<col style="width:${colWidthPct}%;" />`).join("")}
+        ${assignments.map(() => `<col style="width:${colWidthPct}%;" /><col class="export-hl-col" />`).join("")}
       </colgroup>
       <thead><tr>
         <th class="export-turn-th"></th>
@@ -717,7 +717,7 @@ function renderExportPreview() {
         return `<th style="background:${c ? c.color_bg : "#2c1f21"}; color:${c ? c.color_text : "#efe6dd"}">
           ${c && c.avatar_url ? `<img src="${c.avatar_url}" class="th-avatar" />` : ""}
           ${c ? escapeHtml(c.name) : "—"}
-        </th>`;
+        </th><th class="export-hl-th">HL</th>`;
       }).join("")}</tr></thead>
       <tbody>`;
 
@@ -734,35 +734,35 @@ function renderExportPreview() {
     turn.cells.forEach((cell, colIdx) => {
       const columnCharId = assignments[colIdx];
       if (cell.length === 0) {
-        html += `<td></td>`;
+        html += `<td></td><td class="export-hl-td"></td>`;
         return;
       }
-      const actionsHtml = cell
-        .map((entry) => {
-          const color = resolveEntryColor(entry);
-          const entryCharId = entry.characterId || columnCharId;
-          const entryChar = ROSTER.find((x) => x.id === entryCharId);
-          const isWonderEntry = isWonderCharacter(entryChar);
-          const showAvatar = isWonderEntry || entryCharId !== columnCharId;
-          const avatarSrc = isWonderEntry
-            ? PERSONAS.find((p) => p.id === entry.personaId)?.avatar_url
-            : entryChar?.avatar_url;
-          const avatarImg = showAvatar && avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
-          let skillIconUrl = null;
-          if (entry.actionLabel) {
-            if (isWonderEntry) {
-              const persona = PERSONAS.find((p) => p.id === entry.personaId);
-              skillIconUrl = persona ? (PERSONA_SKILLS_CACHE[persona.id] || []).find((s) => s.label === entry.actionLabel)?.icon_url : null;
-            } else if (entryChar) {
-              skillIconUrl = (ROSTER_ACTIONS_CACHE[entryChar.id] || []).find((a) => a.label === entry.actionLabel)?.icon_url;
-            }
+      let actionsHtml = "";
+      let hlHtml = "";
+      cell.forEach((entry) => {
+        const color = resolveEntryColor(entry);
+        const entryCharId = entry.characterId || columnCharId;
+        const entryChar = ROSTER.find((x) => x.id === entryCharId);
+        const isWonderEntry = isWonderCharacter(entryChar);
+        const showAvatar = isWonderEntry || entryCharId !== columnCharId;
+        const avatarSrc = isWonderEntry
+          ? PERSONAS.find((p) => p.id === entry.personaId)?.avatar_url
+          : entryChar?.avatar_url;
+        const avatarImg = showAvatar && avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
+        let skillIconUrl = null;
+        if (entry.actionLabel) {
+          if (isWonderEntry) {
+            const persona = PERSONAS.find((p) => p.id === entry.personaId);
+            skillIconUrl = persona ? (PERSONA_SKILLS_CACHE[persona.id] || []).find((s) => s.label === entry.actionLabel)?.icon_url : null;
+          } else if (entryChar) {
+            skillIconUrl = (ROSTER_ACTIONS_CACHE[entryChar.id] || []).find((a) => a.label === entry.actionLabel)?.icon_url;
           }
-          const skillIconImg = skillIconUrl ? `<img src="${skillIconUrl}" class="td-skill-icon" />` : "";
-          const lineStyle = color ? `background:${hexToRgba(color, 0.55)}; color:#17151b; font-weight:700;` : "";
-          return `<div class="cell-action" style="${lineStyle}">${avatarImg}${skillIconImg}${escapeHtml(entry.actionLabel || "")}</div>`;
-        })
-        .join("");
-      html += `<td>${actionsHtml}</td>`;
+        }
+        const skillIconImg = skillIconUrl ? `<img src="${skillIconUrl}" class="td-skill-icon" />` : "";
+        actionsHtml += `<div class="cell-action">${avatarImg}${skillIconImg}${escapeHtml(entry.actionLabel || "")}</div>`;
+        hlHtml += `<div class="cell-hl" style="${color ? `background:${color};` : ""}"></div>`;
+      });
+      html += `<td>${actionsHtml}</td><td class="export-hl-td">${hlHtml}</td>`;
     });
 
     html += "</tr>";
