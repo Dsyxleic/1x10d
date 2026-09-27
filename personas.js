@@ -1,0 +1,375 @@
+let PERSONA_CACHE = [];
+let PERSONA_SORT_MODE = "custom";
+
+function escapeHtmlP(s) {
+  return (s || "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+async function loadPersonas() {
+  const grid = document.getElementById("persona-grid");
+  const { data, error } = await sb.from("personas").select("*").order("sort_order", { ascending: true });
+
+  if (error) {
+    grid.innerHTML = `<p class="dim">Error cargando personas: ${error.message}</p>`;
+    return;
+  }
+
+  PERSONA_CACHE = data || [];
+  renderPersonaGrid();
+}
+
+function sortedPersonas() {
+  const list = [...PERSONA_CACHE];
+  if (PERSONA_SORT_MODE === "name") {
+    list.sort((a, b) => a.name.localeCompare(b.name, "es"));
+  } else if (PERSONA_SORT_MODE === "element") {
+    list.sort((a, b) => {
+      const ea = a.element || "zzz";
+      const eb = b.element || "zzz";
+      if (ea !== eb) return ea.localeCompare(eb);
+      return a.name.localeCompare(b.name, "es");
+    });
+  }
+  return list;
+}
+
+function renderPersonaGrid() {
+  const grid = document.getElementById("persona-grid");
+
+  if (PERSONA_CACHE.length === 0) {
+    grid.innerHTML = `<p class="dim">Todavía no hay personas. Añade la primera arriba.</p>`;
+    return;
+  }
+
+  grid.innerHTML = sortedPersonas()
+    .map(
+      (p) => `
+      <div class="char-card panel" data-id="${p.id}" style="--card-accent:${p.color_bg || "#1c1a20"};">
+        <div class="char-card-img" data-link-target="${p.link_url ? escapeHtmlP(p.link_url) : ""}">
+          ${p.avatar_url ? `<img src="${p.avatar_url}" alt="${escapeHtmlP(p.name)}" />` : `<span class="no-img">Sin imagen</span>`}
+          ${p.link_url ? `<span class="link-badge" title="Tiene link externo">🔗</span>` : ""}
+          ${p.element ? `<span style="position:absolute; top:6px; left:6px;">${elementBadge(p.element, 22)}</span>` : ""}
+        </div>
+        <div class="char-card-body">
+          <div class="char-card-name">${escapeHtmlP(p.name)}</div>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+
+  grid.querySelectorAll(".char-card-img").forEach((img) => {
+    img.addEventListener("click", (e) => {
+      const url = img.dataset.linkTarget;
+      if (url) {
+        e.stopPropagation();
+        window.open(url, "_blank", "noopener");
+      }
+    });
+  });
+
+  grid.querySelectorAll(".char-card").forEach((card) => {
+    card.addEventListener("click", () => openPersonaModal(card.dataset.id));
+  });
+}
+
+async function saveNewPersona() {
+  const statusEl = document.getElementById("persona-save-status");
+  const name = document.getElementById("new-persona-name").value.trim();
+  const element = document.getElementById("new-persona-element").value;
+  const colorBg = document.getElementById("new-persona-color-bg").value;
+  const colorText = document.getElementById("new-persona-color-text").value;
+  const linkUrl = document.getElementById("new-persona-link").value.trim();
+  const fileInput = document.getElementById("new-persona-image");
+
+  if (!name) {
+    statusEl.textContent = "Ponle un nombre a la persona.";
+    return;
+  }
+
+  statusEl.textContent = "Guardando…";
+
+  let avatarUrl = null;
+  if (fileInput.files && fileInput.files[0]) {
+    const file = fileInput.files[0];
+    const path = safeUploadPath(file, "personas/");
+    const { error: uploadError } = await sb.storage.from("images").upload(path, file);
+    if (uploadError) {
+      statusEl.textContent = "Error subiendo imagen: " + uploadError.message;
+      return;
+    }
+    const { data: urlData } = sb.storage.from("images").getPublicUrl(path);
+    avatarUrl = urlData.publicUrl;
+  }
+
+  const { error } = await sb.from("personas").insert({
+    name,
+    element: element || null,
+    color_bg: colorBg,
+    color_text: colorText,
+    avatar_url: avatarUrl,
+    link_url: linkUrl || null,
+    sort_order: PERSONA_CACHE.length,
+  });
+
+  if (error) {
+    statusEl.textContent = "Error: " + error.message;
+    return;
+  }
+
+  await logActivity("persona", name);
+
+  statusEl.textContent = "Guardado ✓";
+  document.getElementById("new-persona-name").value = "";
+  document.getElementById("new-persona-element").value = "";
+  document.getElementById("new-persona-link").value = "";
+  fileInput.value = "";
+  await loadPersonas();
+}
+
+async function openPersonaModal(id) {
+  const p = PERSONA_CACHE.find((x) => x.id === id);
+  if (!p) return;
+
+  document.getElementById("persona-modal-name").textContent = p.name;
+  document.getElementById("persona-modal").classList.remove("hidden");
+
+  const isAdmin = MenheraAuth.getIsAdmin();
+  const deleteBtnWrap = document.getElementById("persona-modal-delete-wrap");
+  if (deleteBtnWrap) {
+    deleteBtnWrap.innerHTML = isAdmin
+      ? `<button class="btn btn-ghost" id="delete-persona-btn">Eliminar persona</button>`
+      : "";
+    if (isAdmin) {
+      document.getElementById("delete-persona-btn").onclick = async () => {
+        if (!confirm(`¿Eliminar a "${p.name}"? Esto también borra sus skills. No se puede deshacer.`)) return;
+        const { error } = await sb.from("personas").delete().eq("id", id);
+        if (error) { alert("Error: " + error.message); return; }
+        document.getElementById("persona-modal").classList.add("hidden");
+        await loadPersonas();
+      };
+    }
+  }
+
+  const body = document.getElementById("persona-modal-body");
+  body.innerHTML = `<p class="dim">Cargando skills…</p>`;
+
+  const { data: skills, error } = await sb
+    .from("persona_skills")
+    .select("*")
+    .eq("persona_id", id)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    body.innerHTML = `<p class="dim">Error: ${error.message}</p>`;
+    return;
+  }
+
+  body.innerHTML = `
+    ${
+      isAdmin
+        ? `
+      <div class="panel" style="padding:14px; margin-bottom:18px; border-left:3px solid var(--red);">
+        <div class="add-grid">
+          <div>
+            <label>Nombre</label>
+            <input id="edit-persona-name" value="${escapeHtmlP(p.name)}" />
+          </div>
+          <div>
+            <label>Elemento</label>
+            <select id="edit-persona-element">
+              <option value="">— Sin especificar —</option>
+              <option value="physical" ${p.element === "physical" ? "selected" : ""}>Physical</option>
+              <option value="gun" ${p.element === "gun" ? "selected" : ""}>Gun</option>
+              <option value="fire" ${p.element === "fire" ? "selected" : ""}>Fire</option>
+              <option value="ice" ${p.element === "ice" ? "selected" : ""}>Ice</option>
+              <option value="electric" ${p.element === "electric" ? "selected" : ""}>Electric</option>
+              <option value="wind" ${p.element === "wind" ? "selected" : ""}>Wind</option>
+              <option value="psychokinesis" ${p.element === "psychokinesis" ? "selected" : ""}>Psychokinesis</option>
+              <option value="nuclear" ${p.element === "nuclear" ? "selected" : ""}>Nuclear</option>
+              <option value="bless" ${p.element === "bless" ? "selected" : ""}>Bless</option>
+              <option value="curse" ${p.element === "curse" ? "selected" : ""}>Curse</option>
+            </select>
+          </div>
+          <div>
+            <label>Color de fondo</label>
+            <input id="edit-persona-color-bg" type="color" value="${p.color_bg || "#1c1a20"}" />
+          </div>
+          <div>
+            <label>Color de texto</label>
+            <input id="edit-persona-color-text" type="color" value="${p.color_text || "#f1ece7"}" />
+          </div>
+          <div>
+            <label>Reemplazar imagen</label>
+            <input id="edit-persona-image" type="file" accept="image/*" />
+          </div>
+          <div>
+            <label>Link externo</label>
+            <input id="edit-persona-link-url" placeholder="https://…" value="${p.link_url ? escapeHtmlP(p.link_url) : ""}" />
+          </div>
+        </div>
+        <button class="btn btn-primary" id="save-edit-persona-btn" style="margin-top:12px;">Guardar cambios</button>
+        <span id="edit-persona-status" class="dim" style="margin-left:10px; font-size:13px;"></span>
+      </div>
+    `
+        : ""
+    }
+    <div id="persona-skill-list">
+      ${(skills || [])
+        .map(
+          (s) => `
+        <div class="action-row" data-skill-id="${s.id}">
+          ${s.icon_url ? `<img src="${s.icon_url}" class="action-icon" alt="" />` : ""}
+          ${s.default_color ? `<span class="skill-color-dot" style="background:${s.default_color};" title="Color automático"></span>` : ""}
+          <span>${escapeHtmlP(s.label)}</span>
+          ${isAdmin ? `<button class="btn btn-ghost del-skill-btn">Eliminar</button>` : ""}
+        </div>
+      `
+        )
+        .join("") || `<p class="dim">Sin skills todavía.</p>`}
+    </div>
+    ${
+      isAdmin
+        ? `
+      <div class="add-skill-row" style="margin-top:16px;">
+        <input id="new-persona-skill" placeholder="ej. Teurgia, buff, curación…" style="flex:1;" />
+        <input id="new-persona-skill-icon" type="file" accept="image/*" title="Imagen de la skill (opcional)" />
+        <label class="dim" style="font-size:11px; display:flex; flex-direction:column; gap:2px;">
+          Color automático
+          <input id="new-persona-skill-color" type="color" value="#c99ee8" title="Color que se aplicará solo al elegir esta skill" />
+        </label>
+        <label class="dim" style="font-size:11px; display:flex; align-items:center; gap:4px;">
+          <input id="new-persona-skill-color-enabled" type="checkbox" style="width:auto;" /> Usar color
+        </label>
+        <button class="btn btn-primary" id="add-persona-skill-btn">Añadir</button>
+      </div>
+      <span id="add-persona-skill-status" class="dim" style="font-size:12px;"></span>
+    `
+        : ""
+    }
+  `;
+
+  if (isAdmin) {
+    document.getElementById("save-edit-persona-btn").onclick = async () => {
+      const statusEl = document.getElementById("edit-persona-status");
+      const name = document.getElementById("edit-persona-name").value.trim();
+      if (!name) {
+        statusEl.textContent = "El nombre no puede estar vacío.";
+        return;
+      }
+
+      statusEl.textContent = "Guardando…";
+
+      const payload = {
+        name,
+        element: document.getElementById("edit-persona-element").value || null,
+        color_bg: document.getElementById("edit-persona-color-bg").value,
+        color_text: document.getElementById("edit-persona-color-text").value,
+        link_url: document.getElementById("edit-persona-link-url").value.trim() || null,
+      };
+
+      const fileInput = document.getElementById("edit-persona-image");
+      if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const path = safeUploadPath(file, "personas/");
+        const { error: uploadError } = await sb.storage.from("images").upload(path, file);
+        if (uploadError) {
+          statusEl.textContent = "Error subiendo imagen: " + uploadError.message;
+          return;
+        }
+        const { data: urlData } = sb.storage.from("images").getPublicUrl(path);
+        payload.avatar_url = urlData.publicUrl;
+      }
+
+      const { error: updateError } = await sb.from("personas").update(payload).eq("id", id);
+      if (updateError) {
+        statusEl.textContent = "Error: " + updateError.message;
+        return;
+      }
+
+      statusEl.textContent = "Guardado ✓";
+      await loadPersonas();
+      document.getElementById("persona-modal-name").textContent = name;
+    };
+
+    document.getElementById("add-persona-skill-btn").onclick = async () => {
+      const label = document.getElementById("new-persona-skill").value.trim();
+      const statusEl = document.getElementById("add-persona-skill-status");
+      if (!label) {
+        statusEl.textContent = "Escribe algo antes de añadir.";
+        return;
+      }
+
+      statusEl.textContent = "Guardando…";
+
+      let iconUrl = null;
+      const iconInput = document.getElementById("new-persona-skill-icon");
+      if (iconInput.files && iconInput.files[0]) {
+        statusEl.textContent = "Subiendo imagen…";
+        const file = iconInput.files[0];
+        const path = safeUploadPath(file, "skills/");
+        const { error: uploadError } = await sb.storage.from("images").upload(path, file);
+        if (uploadError) {
+          statusEl.textContent = "Error subiendo imagen: " + uploadError.message;
+          return;
+        }
+        const { data: urlData } = sb.storage.from("images").getPublicUrl(path);
+        iconUrl = urlData.publicUrl;
+      }
+
+      const colorEnabled = document.getElementById("new-persona-skill-color-enabled").checked;
+      const defaultColor = colorEnabled ? document.getElementById("new-persona-skill-color").value : null;
+
+      const { error: insertError } = await sb.from("persona_skills").insert({
+        persona_id: id,
+        label,
+        icon_url: iconUrl,
+        default_color: defaultColor,
+        sort_order: (skills || []).length,
+      });
+
+      if (insertError) {
+        statusEl.textContent = "Error: " + insertError.message;
+        return;
+      }
+
+      openPersonaModal(id);
+    };
+
+    body.querySelectorAll(".del-skill-btn").forEach((btn) => {
+      btn.onclick = async (e) => {
+        const row = e.target.closest(".action-row");
+        await sb.from("persona_skills").delete().eq("id", row.dataset.skillId);
+        openPersonaModal(id);
+      };
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadPersonas();
+
+  document.getElementById("persona-modal-close-btn").addEventListener("click", () => {
+    document.getElementById("persona-modal").classList.add("hidden");
+  });
+  document.getElementById("persona-modal").addEventListener("click", (e) => {
+    if (e.target.id === "persona-modal") e.target.classList.add("hidden");
+  });
+
+  document.getElementById("toggle-add-persona-btn").addEventListener("click", () => {
+    document.getElementById("add-persona-panel").classList.toggle("hidden");
+  });
+  document.getElementById("save-persona-btn").addEventListener("click", saveNewPersona);
+
+  document.querySelectorAll("#persona-sort-toggle .chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      PERSONA_SORT_MODE = btn.dataset.sort;
+      document.querySelectorAll("#persona-sort-toggle .chip").forEach((b) => b.classList.toggle("is-active", b === btn));
+      renderPersonaGrid();
+    });
+  });
+
+  MenheraAuth.onChange(() => loadPersonas());
+});

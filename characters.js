@@ -1,0 +1,395 @@
+let CHAR_CACHE = [];
+let CHAR_SORT_MODE = "custom";
+
+async function loadCharacters() {
+  const grid = document.getElementById("character-grid");
+  const { data, error } = await sb
+    .from("characters")
+    .select("*")
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    grid.innerHTML = `<p class="dim">Error cargando personajes: ${error.message}</p>`;
+    return;
+  }
+
+  CHAR_CACHE = data || [];
+  renderCharacterGrid();
+}
+
+function sortedChars() {
+  const list = [...CHAR_CACHE];
+  if (CHAR_SORT_MODE === "name") {
+    list.sort((a, b) => a.name.localeCompare(b.name, "es"));
+  } else if (CHAR_SORT_MODE === "element") {
+    list.sort((a, b) => {
+      const ea = a.element || "zzz";
+      const eb = b.element || "zzz";
+      if (ea !== eb) return ea.localeCompare(eb);
+      return a.name.localeCompare(b.name, "es");
+    });
+  }
+  return list;
+}
+
+function renderCharacterGrid() {
+  const grid = document.getElementById("character-grid");
+
+  if (CHAR_CACHE.length === 0) {
+    grid.innerHTML = `<p class="dim">Todavía no hay personajes. Añade el primero arriba.</p>`;
+    return;
+  }
+
+  grid.innerHTML = sortedChars()
+    .map(
+      (c) => `
+      <div class="char-card panel" data-id="${c.id}" style="--card-accent:${c.color_bg};">
+        <div class="char-card-img" data-link-target="${c.link_url ? escapeHtml(c.link_url) : ""}">
+          ${c.avatar_url ? `<img src="${c.avatar_url}" alt="${escapeHtml(c.name)}" />` : `<span class="no-img">Sin imagen</span>`}
+          ${c.link_url ? `<span class="link-badge" title="Tiene link externo">🔗</span>` : ""}
+          ${c.element ? `<span style="position:absolute; top:6px; left:6px;">${elementBadge(c.element, 22)}</span>` : ""}
+        </div>
+        <div class="char-card-body">
+          <div class="char-card-name">${escapeHtml(c.name)}</div>
+          <div class="char-card-sub">${escapeHtml(c.subtype || c.role || "")}</div>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+
+  grid.querySelectorAll(".char-card-img").forEach((img) => {
+    img.addEventListener("click", (e) => {
+      const url = img.dataset.linkTarget;
+      if (url) {
+        e.stopPropagation();
+        window.open(url, "_blank", "noopener");
+      }
+    });
+  });
+
+  grid.querySelectorAll(".char-card").forEach((card) => {
+    card.addEventListener("click", () => openCharModal(card.dataset.id));
+  });
+}
+
+function escapeHtml(s) {
+  return (s || "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+async function saveNewCharacter() {
+  const statusEl = document.getElementById("char-save-status");
+  const name = document.getElementById("new-name").value.trim();
+  const subtype = document.getElementById("new-subtype").value.trim();
+  const role = document.getElementById("new-role").value.trim();
+  const element = document.getElementById("new-element").value;
+  const colorBg = document.getElementById("new-color-bg").value;
+  const colorText = document.getElementById("new-color-text").value;
+  const linkUrl = document.getElementById("new-link").value.trim();
+  const fileInput = document.getElementById("new-image");
+
+  if (!name) {
+    statusEl.textContent = "Ponle un nombre al personaje.";
+    return;
+  }
+
+  statusEl.textContent = "Guardando…";
+
+  let avatarUrl = null;
+  if (fileInput.files && fileInput.files[0]) {
+    const file = fileInput.files[0];
+    const path = safeUploadPath(file);
+    const { error: uploadError } = await sb.storage
+      .from("images")
+      .upload(path, file);
+
+    if (uploadError) {
+      statusEl.textContent = "Error subiendo imagen: " + uploadError.message;
+      return;
+    }
+    const { data: urlData } = sb.storage.from("images").getPublicUrl(path);
+    avatarUrl = urlData.publicUrl;
+  }
+
+  const { error } = await sb.from("characters").insert({
+    name,
+    subtype,
+    role,
+    element: element || null,
+    color_bg: colorBg,
+    color_text: colorText,
+    avatar_url: avatarUrl,
+    link_url: linkUrl || null,
+    sort_order: CHAR_CACHE.length,
+  });
+
+  if (error) {
+    statusEl.textContent = "Error: " + error.message;
+    return;
+  }
+
+  await logActivity("character", name);
+
+  statusEl.textContent = "Guardado ✓";
+  document.getElementById("new-name").value = "";
+  document.getElementById("new-subtype").value = "";
+  document.getElementById("new-role").value = "";
+  document.getElementById("new-element").value = "";
+  document.getElementById("new-link").value = "";
+  fileInput.value = "";
+  await loadCharacters();
+}
+async function openCharModal(id) {
+  const c = CHAR_CACHE.find((x) => x.id === id);
+  if (!c) return;
+
+  document.getElementById("modal-char-name").textContent = c.name;
+  document.getElementById("char-modal").classList.remove("hidden");
+
+  const isAdmin = MenheraAuth.getIsAdmin();
+  const deleteBtnWrap = document.getElementById("modal-delete-wrap");
+  if (deleteBtnWrap) {
+    deleteBtnWrap.innerHTML = isAdmin
+      ? `<button class="btn btn-ghost" id="delete-char-btn">Eliminar personaje</button>`
+      : "";
+    if (isAdmin) {
+      document.getElementById("delete-char-btn").onclick = async () => {
+        if (!confirm(`¿Eliminar a "${c.name}"? Esto también borra sus skills. No se puede deshacer.`)) return;
+        const { error } = await sb.from("characters").delete().eq("id", id);
+        if (error) { alert("Error: " + error.message); return; }
+        document.getElementById("char-modal").classList.add("hidden");
+        await loadCharacters();
+      };
+    }
+  }
+
+  const body = document.getElementById("modal-body");
+  body.innerHTML = `<p class="dim">Cargando skills…</p>`;
+
+  const { data: actions, error } = await sb
+    .from("character_actions")
+    .select("*")
+    .eq("character_id", id)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    body.innerHTML = `<p class="dim">Error: ${error.message}</p>`;
+    return;
+  }
+
+  body.innerHTML = `
+    ${
+      isAdmin
+        ? `
+      <div class="panel" style="padding:14px; margin-bottom:18px; border-left:3px solid var(--red);">
+        <div class="add-grid">
+          <div>
+            <label>Nombre</label>
+            <input id="edit-name" value="${escapeHtml(c.name)}" />
+          </div>
+          <div>
+            <label>Subtipo / etiqueta</label>
+            <input id="edit-subtype" value="${escapeHtml(c.subtype || "")}" />
+          </div>
+          <div>
+            <label>Rol</label>
+            <input id="edit-role" value="${escapeHtml(c.role || "")}" />
+          </div>
+          <div>
+            <label>Elemento</label>
+            <select id="edit-element">
+              <option value="">— Sin especificar —</option>
+              <option value="physical" ${c.element === "physical" ? "selected" : ""}>Physical</option>
+              <option value="gun" ${c.element === "gun" ? "selected" : ""}>Gun</option>
+              <option value="fire" ${c.element === "fire" ? "selected" : ""}>Fire</option>
+              <option value="ice" ${c.element === "ice" ? "selected" : ""}>Ice</option>
+              <option value="electric" ${c.element === "electric" ? "selected" : ""}>Electric</option>
+              <option value="wind" ${c.element === "wind" ? "selected" : ""}>Wind</option>
+              <option value="psychokinesis" ${c.element === "psychokinesis" ? "selected" : ""}>Psychokinesis</option>
+              <option value="nuclear" ${c.element === "nuclear" ? "selected" : ""}>Nuclear</option>
+              <option value="bless" ${c.element === "bless" ? "selected" : ""}>Bless</option>
+              <option value="curse" ${c.element === "curse" ? "selected" : ""}>Curse</option>
+            </select>
+          </div>
+          <div>
+            <label>Color de fondo</label>
+            <input id="edit-color-bg" type="color" value="${c.color_bg}" />
+          </div>
+          <div>
+            <label>Color de texto</label>
+            <input id="edit-color-text" type="color" value="${c.color_text}" />
+          </div>
+          <div>
+            <label>Reemplazar imagen</label>
+            <input id="edit-image" type="file" accept="image/*" />
+          </div>
+          <div>
+            <label>Link externo</label>
+            <input id="edit-link-url" placeholder="https://…" value="${c.link_url ? escapeHtml(c.link_url) : ""}" />
+          </div>
+        </div>
+        <button class="btn btn-primary" id="save-edit-char-btn" style="margin-top:12px;">Guardar cambios</button>
+        <span id="edit-char-status" class="dim" style="margin-left:10px; font-size:13px;"></span>
+      </div>
+    `
+        : ""
+    }
+    <div id="action-list">
+      ${(actions || [])
+        .map(
+          (a) => `
+        <div class="action-row" data-action-id="${a.id}">
+          ${a.icon_url ? `<img src="${a.icon_url}" class="action-icon" alt="" />` : ""}
+          ${a.default_color ? `<span class="skill-color-dot" style="background:${a.default_color};" title="Color automático"></span>` : ""}
+          <span>${escapeHtml(a.label)}</span>
+          ${isAdmin ? `<button class="btn btn-ghost del-action-btn">Eliminar</button>` : ""}
+        </div>
+      `
+        )
+        .join("") || `<p class="dim">Sin skills todavía.</p>`}
+    </div>
+    ${
+      isAdmin
+        ? `
+      <div class="add-skill-row" style="margin-top:16px;">
+        <input id="new-action-label" placeholder="ej. Skill 3, Rebelión, Golpe Especial…" style="flex:1;" />
+        <input id="new-action-icon" type="file" accept="image/*" title="Imagen de la skill (opcional)" />
+        <label class="dim" style="font-size:11px; display:flex; flex-direction:column; gap:2px;">
+          Color automático
+          <input id="new-action-color" type="color" value="#e8c34a" title="Color que se aplicará solo al elegir esta skill" />
+        </label>
+        <label class="dim" style="font-size:11px; display:flex; align-items:center; gap:4px;">
+          <input id="new-action-color-enabled" type="checkbox" style="width:auto;" /> Usar color
+        </label>
+        <button class="btn btn-primary" id="add-action-btn">Añadir</button>
+      </div>
+      <span id="add-action-status" class="dim" style="font-size:12px;"></span>
+    `
+        : ""
+    }
+  `;
+
+  if (isAdmin) {
+    document.getElementById("save-edit-char-btn").onclick = async () => {
+      const statusEl = document.getElementById("edit-char-status");
+      const name = document.getElementById("edit-name").value.trim();
+      if (!name) {
+        statusEl.textContent = "El nombre no puede estar vacío.";
+        return;
+      }
+
+      statusEl.textContent = "Guardando…";
+
+      const payload = {
+        name,
+        subtype: document.getElementById("edit-subtype").value.trim(),
+        role: document.getElementById("edit-role").value.trim(),
+        element: document.getElementById("edit-element").value || null,
+        color_bg: document.getElementById("edit-color-bg").value,
+        color_text: document.getElementById("edit-color-text").value,
+        link_url: document.getElementById("edit-link-url").value.trim() || null,
+      };
+
+      const fileInput = document.getElementById("edit-image");
+      if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const path = safeUploadPath(file);
+        const { error: uploadError } = await sb.storage.from("images").upload(path, file);
+        if (uploadError) {
+          statusEl.textContent = "Error subiendo imagen: " + uploadError.message;
+          return;
+        }
+        const { data: urlData } = sb.storage.from("images").getPublicUrl(path);
+        payload.avatar_url = urlData.publicUrl;
+      }
+
+      const { error: updateError } = await sb.from("characters").update(payload).eq("id", id);
+      if (updateError) {
+        statusEl.textContent = "Error: " + updateError.message;
+        return;
+      }
+
+      statusEl.textContent = "Guardado ✓";
+      await loadCharacters();
+      document.getElementById("modal-char-name").textContent = name;
+    };
+
+    document.getElementById("add-action-btn").onclick = async () => {
+      const label = document.getElementById("new-action-label").value.trim();
+      const statusEl = document.getElementById("add-action-status");
+      if (!label) {
+        statusEl.textContent = "Escribe algo antes de añadir.";
+        return;
+      }
+
+      statusEl.textContent = "Guardando…";
+
+      let iconUrl = null;
+      const iconInput = document.getElementById("new-action-icon");
+      if (iconInput.files && iconInput.files[0]) {
+        statusEl.textContent = "Subiendo imagen…";
+        const file = iconInput.files[0];
+        const path = safeUploadPath(file, "skills/");
+        const { error: uploadError } = await sb.storage.from("images").upload(path, file);
+        if (uploadError) {
+          statusEl.textContent = "Error subiendo imagen: " + uploadError.message;
+          return;
+        }
+        const { data: urlData } = sb.storage.from("images").getPublicUrl(path);
+        iconUrl = urlData.publicUrl;
+      }
+
+      const colorEnabled = document.getElementById("new-action-color-enabled").checked;
+      const defaultColor = colorEnabled ? document.getElementById("new-action-color").value : null;
+
+      const { error: insertError } = await sb.from("character_actions").insert({
+        character_id: id,
+        label,
+        icon_url: iconUrl,
+        default_color: defaultColor,
+        sort_order: (actions || []).length,
+      });
+
+      if (insertError) {
+        statusEl.textContent = "Error: " + insertError.message;
+        return;
+      }
+      openCharModal(id);
+    };
+
+    body.querySelectorAll(".del-action-btn").forEach((btn) => {
+      btn.onclick = async (e) => {
+        const row = e.target.closest(".action-row");
+        await sb.from("character_actions").delete().eq("id", row.dataset.actionId);
+        openCharModal(id);
+      };
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadCharacters();
+
+  document.getElementById("modal-close-btn").addEventListener("click", () => {
+    document.getElementById("char-modal").classList.add("hidden");
+  });
+  document.getElementById("char-modal").addEventListener("click", (e) => {
+    if (e.target.id === "char-modal") e.target.classList.add("hidden");
+  });
+
+  document.getElementById("toggle-add-btn").addEventListener("click", () => {
+    document.getElementById("add-character-panel").classList.toggle("hidden");
+  });
+  document.getElementById("save-character-btn").addEventListener("click", saveNewCharacter);
+
+  document.querySelectorAll("#char-sort-toggle .chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      CHAR_SORT_MODE = btn.dataset.sort;
+      document.querySelectorAll("#char-sort-toggle .chip").forEach((b) => b.classList.toggle("is-active", b === btn));
+      renderCharacterGrid();
+    });
+  });
+
+  MenheraAuth.onChange(() => loadCharacters());
+});
