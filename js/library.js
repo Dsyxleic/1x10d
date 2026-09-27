@@ -84,15 +84,16 @@ function renderList() {
             )
             .join("")}</div>`
         : "";
-      const bossColor = r.boss_id ? BOSS_COLOR_MAP[r.boss_id] : null;
+      const cardColor = r.color || (r.boss_id ? BOSS_COLOR_MAP[r.boss_id] : null);
       return `
-        <div class="rotation-card panel" style="${bossColor ? `border-left-color:${bossColor};` : ""}">
+        <div class="rotation-card panel" style="${cardColor ? `border-left-color:${cardColor};` : ""}">
           <div class="rotation-card-title">${escapeHtml(r.title)}</div>
           ${compHtml}
           <div class="rotation-card-meta">
             ${bossName ? `<span><span class="tag">Jefe</span> ${escapeHtml(bossName)}</span>` : ""}
             ${modeName ? `<span><span class="tag">Modo</span> ${escapeHtml(modeName)}</span>` : ""}
             ${dpsName ? `<span><span class="tag">DPS</span> ${escapeHtml(dpsName)}</span>` : ""}
+            ${r.points ? `<span><span class="tag">Puntos</span> ${Number(r.points).toLocaleString("es-ES")}</span>` : ""}
           </div>
           <div class="rotation-card-actions">
             <a class="btn btn-ghost" href="rotation-view.html?id=${r.id}">Ver</a>

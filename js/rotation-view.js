@@ -4,6 +4,14 @@ function escapeHtml(s) {
   }[c]));
 }
 
+function hexToRgbaRV(hex, alpha) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 async function loadRotation() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get("id");
@@ -34,11 +42,20 @@ async function loadRotation() {
     const { data: c } = await sb.from("characters").select("name").eq("id", r.dps_character_id).single();
     if (c) metaParts.push(`DPS: ${c.name}`);
   }
+  if (r.points) metaParts.push(`Puntos: ${Number(r.points).toLocaleString("es-ES")}`);
   document.getElementById("rv-meta").textContent = metaParts.join("   //   ");
 
   if (r.notes) {
     document.getElementById("rv-notes").classList.remove("hidden");
     document.getElementById("rv-notes").innerHTML = `<strong>Notas:</strong> ${escapeHtml(r.notes)}`;
+  }
+
+  if (r.screenshot_url) {
+    document.getElementById("rv-screenshot").classList.remove("hidden");
+    document.getElementById("rv-screenshot").innerHTML = `
+      <strong>Captura de resultado</strong>
+      <div style="margin-top:8px;"><img src="${r.screenshot_url}" style="max-width:100%; border-radius:6px; border:1px solid var(--line);" /></div>
+    `;
   }
 
   const grid0 = r.grid || {};
@@ -171,8 +188,8 @@ async function loadRotation() {
       }
       const actionsHtml = cell
         .map((entry) => {
-          const color = entry?.tag ? TAG_COLORS[entry.tag] : null;
-          const lineStyle = color ? `background:${color}2e; color:${color}; font-weight:600;` : "";
+          const color = entry?.color || (entry?.tag ? TAG_COLORS[entry.tag] : null);
+          const lineStyle = color ? `background:${hexToRgbaRV(color, 0.45)}; color:${color}; font-weight:700;` : "";
           const entryCharId = entry.characterId || columnCharId;
           const entryChar = charMap[entryCharId];
           const isWonderEntry = entryChar && entryChar.name.trim().toLowerCase() === "wonder";

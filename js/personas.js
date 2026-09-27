@@ -222,6 +222,7 @@ async function openPersonaModal(id) {
           (s) => `
         <div class="action-row" data-skill-id="${s.id}">
           ${s.icon_url ? `<img src="${s.icon_url}" class="action-icon" alt="" />` : ""}
+          ${s.default_color ? `<span class="skill-color-dot" style="background:${s.default_color};" title="Color automático"></span>` : ""}
           <span>${escapeHtmlP(s.label)}</span>
           ${isAdmin ? `<button class="btn btn-ghost del-skill-btn">Eliminar</button>` : ""}
         </div>
@@ -235,6 +236,13 @@ async function openPersonaModal(id) {
       <div class="add-skill-row" style="margin-top:16px;">
         <input id="new-persona-skill" placeholder="ej. Teurgia, buff, curación…" style="flex:1;" />
         <input id="new-persona-skill-icon" type="file" accept="image/*" title="Imagen de la skill (opcional)" />
+        <label class="dim" style="font-size:11px; display:flex; flex-direction:column; gap:2px;">
+          Color automático
+          <input id="new-persona-skill-color" type="color" value="#c99ee8" title="Color que se aplicará solo al elegir esta skill" />
+        </label>
+        <label class="dim" style="font-size:11px; display:flex; align-items:center; gap:4px;">
+          <input id="new-persona-skill-color-enabled" type="checkbox" style="width:auto;" /> Usar color
+        </label>
         <button class="btn btn-primary" id="add-persona-skill-btn">Añadir</button>
       </div>
       <span id="add-persona-skill-status" class="dim" style="font-size:12px;"></span>
@@ -311,10 +319,14 @@ async function openPersonaModal(id) {
         iconUrl = urlData.publicUrl;
       }
 
+      const colorEnabled = document.getElementById("new-persona-skill-color-enabled").checked;
+      const defaultColor = colorEnabled ? document.getElementById("new-persona-skill-color").value : null;
+
       const { error: insertError } = await sb.from("persona_skills").insert({
         persona_id: id,
         label,
         icon_url: iconUrl,
+        default_color: defaultColor,
         sort_order: (skills || []).length,
       });
 

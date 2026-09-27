@@ -18,6 +18,13 @@ function tagDef(key) {
   return TAG_DEFS.find((t) => t.key === key) || null;
 }
 
+// color final de una acción: el color propio de la skill (si tiene) gana sobre el punto manual
+function resolveEntryColor(entry) {
+  if (entry.color) return entry.color;
+  const tag = tagDef(entry.tag);
+  return tag ? tag.color : null;
+}
+
 function uid() {
   return Math.random().toString(36).slice(2, 9);
 }
@@ -368,10 +375,10 @@ function isWonderCharacter(character) {
 function renderEntryRow(entry, columnCharId) {
   const div = document.createElement("div");
   div.className = "entry-row";
-  const tag = tagDef(entry.tag);
-  if (tag) {
-    div.style.background = hexToRgba(tag.color, 0.18);
-    div.style.borderLeft = `3px solid ${tag.color}`;
+  const rowColor = resolveEntryColor(entry);
+  if (rowColor) {
+    div.style.background = hexToRgba(rowColor, 0.18);
+    div.style.borderLeft = `3px solid ${rowColor}`;
   }
 
   const effectiveCharId = entry.characterId || columnCharId;
@@ -450,8 +457,12 @@ function renderEntryRow(entry, columnCharId) {
       if (skillSelect.value === "__custom__") {
         const custom = prompt("Escribe la skill:", entry.actionLabel || "");
         entry.actionLabel = custom || "";
+        entry.color = null;
       } else {
         entry.actionLabel = skillSelect.value;
+        const matched = personaSkills.find((s) => s.label === skillSelect.value);
+        entry.color = matched?.default_color || null;
+        entry.tag = null;
       }
       renderTurns();
     };
@@ -480,9 +491,13 @@ function renderEntryRow(entry, columnCharId) {
       if (select.value === "__custom__") {
         const custom = prompt("Escribe el nombre de la acción:", entry.actionLabel || "");
         entry.actionLabel = custom || "";
+        entry.color = null;
         renderTurns();
       } else {
         entry.actionLabel = select.value;
+        const matched = actionOptions.find((a) => a.label === select.value);
+        entry.color = matched?.default_color || null;
+        entry.tag = null;
         renderTurns();
       }
     };
@@ -511,6 +526,7 @@ function renderEntryRow(entry, columnCharId) {
     dot.title = t.label;
     dot.onclick = () => {
       entry.tag = entry.tag === t.key ? null : t.key;
+      entry.color = null;
       renderTurns();
     };
     tagsWrap.appendChild(dot);
@@ -582,12 +598,27 @@ async function saveRotation() {
     boss_id: document.getElementById("rot-boss").value || null,
     game_mode_id: document.getElementById("rot-mode").value || null,
     dps_character_id: document.getElementById("rot-dps").value || null,
+    color: document.getElementById("rot-color").value || null,
+    points: document.getElementById("rot-points").value ? parseInt(document.getElementById("rot-points").value, 10) : null,
     wonder_knife: grid.wonder.knife,
     grid,
     updated_at: new Date().toISOString(),
   };
 
   statusEl.textContent = "Guardando…";
+
+  const screenshotInput = document.getElementById("rot-screenshot");
+  if (screenshotInput.files && screenshotInput.files[0]) {
+    const file = screenshotInput.files[0];
+    const path = safeUploadPath(file, "screenshots/");
+    const { error: uploadError } = await sb.storage.from("images").upload(path, file);
+    if (uploadError) {
+      statusEl.textContent = "Error subiendo captura: " + uploadError.message;
+      return;
+    }
+    const { data: urlData } = sb.storage.from("images").getPublicUrl(path);
+    payload.screenshot_url = urlData.publicUrl;
+  }
 
   let error;
   const isNew = !EDITING_ROTATION_ID;
@@ -613,9 +644,16 @@ async function loadRotationForEdit(id) {
   document.getElementById("rot-title").value = data.title || "";
   document.getElementById("rot-notes").value = data.notes || "";
   document.getElementById("wonder-knife").value = data.wonder_knife || "";
+  document.getElementById("rot-color").value = data.color || "#7a1518";
+  document.getElementById("rot-points").value = data.points || "";
   if (data.boss_id) document.getElementById("rot-boss").value = data.boss_id;
   if (data.game_mode_id) document.getElementById("rot-mode").value = data.game_mode_id;
   if (data.dps_character_id) document.getElementById("rot-dps").value = data.dps_character_id;
+
+  const preview = document.getElementById("rot-screenshot-preview");
+  preview.innerHTML = data.screenshot_url
+    ? `<img src="${data.screenshot_url}" style="max-width:220px; border-radius:6px; border:1px solid var(--line);" />`
+    : "";
 
   const grid = data.grid || { columns: [], turns: [] };
   COLUMN_COUNT = grid.columns?.length || 4;
@@ -701,7 +739,7 @@ function renderExportPreview() {
       }
       const actionsHtml = cell
         .map((entry) => {
-          const tag = tagDef(entry.tag);
+          const color = resolveEntryColor(entry);
           const entryCharId = entry.characterId || columnCharId;
           const entryChar = ROSTER.find((x) => x.id === entryCharId);
           const isWonderEntry = isWonderCharacter(entryChar);
@@ -720,7 +758,7 @@ function renderExportPreview() {
             }
           }
           const skillIconImg = skillIconUrl ? `<img src="${skillIconUrl}" class="td-skill-icon" />` : "";
-          const lineStyle = tag ? `background:${hexToRgba(tag.color, 0.28)}; color:${tag.color}; font-weight:600;` : "";
+          const lineStyle = color ? `background:${hexToRgba(color, 0.45)}; color:${color}; font-weight:700;` : "";
           return `<div class="cell-action" style="${lineStyle}">${avatarImg}${skillIconImg}${escapeHtml(entry.actionLabel || "")}</div>`;
         })
         .join("");
@@ -826,216 +864,6 @@ async function importRotationJSON(file) {
 
   statusEl.textContent = "Archivo importado — revísalo y dale a \"Guardar rotación\".";
 }
-// ---------------- Importar desde Lufel Tactic Maker ----------------
-
-let LUFEL_DATA = null;
-let LUFEL_CHAR_NAMES = [];
-let LUFEL_PERSONA_NAMES = [];
-let LUFEL_CHAR_HINTS = {}; // name -> { order, nature }
-
-const LUFEL_ACTION_DICT = {
-  "스킬1": "Skill 1",
-  "스킬2": "Skill 2",
-  "스킬3": "Skill 3",
-  "아이템": "Item",
-  "skill1": "Skill 1",
-  "skill2": "Skill 2",
-  "skill3": "Skill 3",
-  "item": "Item",
-};
-
-async function handleLufelFile(file) {
-  let data;
-  try {
-    data = JSON.parse(await file.text());
-  } catch (e) {
-    alert("Ese archivo no es válido.");
-    return;
-  }
-  LUFEL_DATA = data;
-
-  const charNames = new Set();
-  (data.party || []).forEach((p) => { if (p && p.name) charNames.add(p.name); });
-  (data.turns || []).forEach((t) => {
-    Object.values(t.columns || {}).forEach((entries) => {
-      (entries || []).forEach((e) => {
-        if (e && e.character && (e.wonderPersonaIndex === undefined || e.wonderPersonaIndex === -1)) {
-          charNames.add(e.character);
-        }
-      });
-    });
-  });
-  LUFEL_CHAR_NAMES = [...charNames];
-  LUFEL_PERSONA_NAMES = (data.wonder?.personas || []).map((p) => p?.name).filter(Boolean);
-
-  LUFEL_CHAR_HINTS = {};
-  (data.party || []).forEach((p) => {
-    if (p && p.name) {
-      LUFEL_CHAR_HINTS[p.name] = {
-        order: p.order && p.order !== "-" ? p.order : null,
-        nature: p.natureSkill?.nature || null,
-      };
-    }
-  });
-
-  renderLufelMapping();
-  document.getElementById("lufel-modal").classList.remove("hidden");
-}
-
-function lufelTranslateLink(name) {
-  const url = `https://translate.google.com/?sl=auto&tl=es&text=${encodeURIComponent(name)}&op=translate`;
-  return `<a href="${url}" target="_blank" rel="noopener" class="mono" style="font-size:11px;">Traducir ↗</a>`;
-}
-
-function renderLufelMapping() {
-  const box = document.getElementById("lufel-mapping-body");
-  let html = "";
-
-  if (LUFEL_CHAR_NAMES.length) {
-    html += `<h4 style="margin:10px 0; font-family:var(--f-mono); text-transform:uppercase; font-size:12px; color:var(--bone-dim);">Personajes</h4>`;
-    LUFEL_CHAR_NAMES.forEach((name) => {
-      const hint = LUFEL_CHAR_HINTS[name];
-      const hintParts = [];
-      if (hint?.order) hintParts.push(`Columna ${hint.order}`);
-      if (hint?.nature) hintParts.push(hint.nature);
-      html += `
-        <div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--line);">
-          <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:6px;">
-            <span>
-              <span class="mono">${escapeHtml(name)}</span>
-              ${hintParts.length ? `<span class="badge" style="margin-left:8px;">${escapeHtml(hintParts.join(" · "))}</span>` : ""}
-            </span>
-            ${lufelTranslateLink(name)}
-          </div>
-          <select data-lufel-char="${escapeHtml(name)}" style="width:100%;">
-            <option value="">— Omitir —</option>
-            ${ROSTER.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("")}
-          </select>
-        </div>
-      `;
-    });
-  }
-
-  if (LUFEL_PERSONA_NAMES.length) {
-    html += `<h4 style="margin:16px 0 10px; font-family:var(--f-mono); text-transform:uppercase; font-size:12px; color:var(--bone-dim);">Personas de Wonder</h4>`;
-    LUFEL_PERSONA_NAMES.forEach((name) => {
-      html += `
-        <div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--line);">
-          <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:6px;">
-            <span class="mono">${escapeHtml(name)}</span>
-            ${lufelTranslateLink(name)}
-          </div>
-          <select data-lufel-persona="${escapeHtml(name)}" style="width:100%;">
-            <option value="">— Omitir —</option>
-            ${PERSONAS.map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
-          </select>
-        </div>
-      `;
-    });
-  }
-
-  box.innerHTML = html || `<p class="dim">No se han detectado nombres en el archivo.</p>`;
-}
-
-function translateLufelAction(raw) {
-  let label = raw || "";
-  let tag = null;
-  if (label.trim().toUpperCase() === "HIGHLIGHT") {
-    tag = "hl";
-    label = "Highlight";
-  } else if (LUFEL_ACTION_DICT[label]) {
-    label = LUFEL_ACTION_DICT[label];
-  }
-  return { label, tag };
-}
-
-function applyLufelImport() {
-  const data = LUFEL_DATA;
-  if (!data) return;
-
-  const charMap = {};
-  document.querySelectorAll("[data-lufel-char]").forEach((s) => {
-    if (s.value) charMap[s.dataset.lufelChar] = s.value;
-  });
-  const personaMap = {};
-  document.querySelectorAll("[data-lufel-persona]").forEach((s) => {
-    if (s.value) personaMap[s.dataset.lufelPersona] = s.value;
-  });
-
-  const wonderChar = ROSTER.find((c) => isWonderCharacter(c));
-
-  EDITING_ROTATION_ID = null;
-  document.getElementById("rot-title").value = data.title || "";
-  document.getElementById("rot-notes").value = data.memo || "";
-  document.getElementById("wonder-knife").value = data.wonder?.weapon || "";
-
-  COLUMN_COUNT = 5;
-  const partyByOrder = {};
-  (data.party || []).forEach((p) => {
-    if (!p) return;
-    const ord = parseInt(p.order, 10);
-    if (ord >= 1 && ord <= 4) partyByOrder[ord] = p.name;
-  });
-  const columnCharIds = [1, 2, 3, 4].map((n) => {
-    const name = partyByOrder[n];
-    return name && charMap[name] ? charMap[name] : "";
-  });
-  columnCharIds.push(wonderChar ? wonderChar.id : "");
-
-  TURNS = (data.turns || []).map((t) => {
-    const cells = [[], [], [], [], []];
-    Object.entries(t.columns || {}).forEach(([key, entries]) => {
-      (entries || []).forEach((e) => {
-        if (!e) return;
-        const isWonderEntry = e.wonderPersonaIndex !== undefined && e.wonderPersonaIndex !== -1;
-        const { label, tag } = translateLufelAction(e.action);
-        const finalLabel = e.mikuMusic ? `${label} (${e.mikuMusic})` : label;
-
-        if (isWonderEntry) {
-          const personaId = e.wonderPersona ? personaMap[e.wonderPersona] : null;
-          cells[4].push({
-            id: uid(),
-            characterId: wonderChar ? wonderChar.id : "",
-            actionLabel: finalLabel,
-            tag,
-            personaId: personaId || null,
-          });
-        } else {
-          const colIdx = key === "mystery" ? 4 : parseInt(key, 10) - 1;
-          if (colIdx < 0 || colIdx > 4) return;
-          const charId = e.character ? charMap[e.character] : "";
-          cells[colIdx].push({
-            id: uid(),
-            characterId: charId || "",
-            actionLabel: finalLabel,
-            tag,
-            personaId: null,
-          });
-        }
-      });
-    });
-    return { tag: null, cells };
-  });
-
-  WONDER_PERSONAS = (data.wonder?.personas || []).slice(0, 3).map((p) => {
-    if (!p || !p.name || !personaMap[p.name]) return null;
-    const firstSkill = (p.skills || []).find((s) => s);
-    return { personaId: personaMap[p.name], skillLabel: firstSkill || "" };
-  });
-  while (WONDER_PERSONAS.length < 3) WONDER_PERSONAS.push(null);
-
-  renderColumnSelectors();
-  document.querySelectorAll(".col-select").forEach((s, i) => {
-    if (columnCharIds[i]) s.value = columnCharIds[i];
-  });
-
-  renderTurns();
-  renderWonderPersonaSlots();
-
-  document.getElementById("lufel-modal").classList.add("hidden");
-  document.getElementById("save-status").textContent =
-    "Importado desde Lufel — revísalo y dale a \"Guardar rotación\".";
-}
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("add-turn-btn").addEventListener("click", addTurn);
@@ -1046,14 +874,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (e.target.files[0]) importRotationJSON(e.target.files[0]);
     e.target.value = "";
   });
-  document.getElementById("import-lufel-input").addEventListener("change", (e) => {
-    if (e.target.files[0]) handleLufelFile(e.target.files[0]);
-    e.target.value = "";
-  });
-  document.getElementById("lufel-close-btn").addEventListener("click", () => {
-    document.getElementById("lufel-modal").classList.add("hidden");
-  });
-  document.getElementById("lufel-confirm-btn").addEventListener("click", applyLufelImport);
 
   await loadAllActions();
   await loadRosterAndBosses();

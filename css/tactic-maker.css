@@ -329,7 +329,7 @@
   table-layout: fixed;
 }
 .export-table th, .export-table td {
-  border: 1px solid var(--line);
+  border: 1px solid var(--static);
   padding: 0;
   font-size: 13px;
   text-align: left;

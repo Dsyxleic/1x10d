@@ -241,6 +241,7 @@ async function openCharModal(id) {
           (a) => `
         <div class="action-row" data-action-id="${a.id}">
           ${a.icon_url ? `<img src="${a.icon_url}" class="action-icon" alt="" />` : ""}
+          ${a.default_color ? `<span class="skill-color-dot" style="background:${a.default_color};" title="Color automático"></span>` : ""}
           <span>${escapeHtml(a.label)}</span>
           ${isAdmin ? `<button class="btn btn-ghost del-action-btn">Eliminar</button>` : ""}
         </div>
@@ -254,6 +255,13 @@ async function openCharModal(id) {
       <div class="add-skill-row" style="margin-top:16px;">
         <input id="new-action-label" placeholder="ej. Skill 3, Rebelión, Golpe Especial…" style="flex:1;" />
         <input id="new-action-icon" type="file" accept="image/*" title="Imagen de la skill (opcional)" />
+        <label class="dim" style="font-size:11px; display:flex; flex-direction:column; gap:2px;">
+          Color automático
+          <input id="new-action-color" type="color" value="#e8c34a" title="Color que se aplicará solo al elegir esta skill" />
+        </label>
+        <label class="dim" style="font-size:11px; display:flex; align-items:center; gap:4px;">
+          <input id="new-action-color-enabled" type="checkbox" style="width:auto;" /> Usar color
+        </label>
         <button class="btn btn-primary" id="add-action-btn">Añadir</button>
       </div>
       <span id="add-action-status" class="dim" style="font-size:12px;"></span>
@@ -332,10 +340,14 @@ async function openCharModal(id) {
         iconUrl = urlData.publicUrl;
       }
 
+      const colorEnabled = document.getElementById("new-action-color-enabled").checked;
+      const defaultColor = colorEnabled ? document.getElementById("new-action-color").value : null;
+
       const { error: insertError } = await sb.from("character_actions").insert({
         character_id: id,
         label,
         icon_url: iconUrl,
+        default_color: defaultColor,
         sort_order: (actions || []).length,
       });
 
