@@ -1,6 +1,5 @@
 let ALL_ROTATIONS = [];
 let BOSS_MAP = {};
-let BOSS_COLOR_MAP = {};
 let CHAR_MAP = {};
 let CHAR_AVATAR_MAP = {};
 let MODE_MAP = {};
@@ -20,10 +19,7 @@ async function loadLibrary() {
   ]);
 
   ALL_ROTATIONS = rotations || [];
-  (bosses || []).forEach((b) => {
-    BOSS_MAP[b.id] = b.name;
-    BOSS_COLOR_MAP[b.id] = b.color || "#7a1518";
-  });
+  (bosses || []).forEach((b) => (BOSS_MAP[b.id] = b.name));
   (chars || []).forEach((c) => {
     CHAR_MAP[c.id] = c.name;
     CHAR_AVATAR_MAP[c.id] = c.avatar_url;
@@ -84,16 +80,14 @@ function renderList() {
             )
             .join("")}</div>`
         : "";
-      const cardColor = r.color || (r.boss_id ? BOSS_COLOR_MAP[r.boss_id] : null);
       return `
-        <div class="rotation-card panel" style="${cardColor ? `border-left-color:${cardColor};` : ""}">
+        <div class="rotation-card panel">
           <div class="rotation-card-title">${escapeHtml(r.title)}</div>
           ${compHtml}
           <div class="rotation-card-meta">
             ${bossName ? `<span><span class="tag">Jefe</span> ${escapeHtml(bossName)}</span>` : ""}
             ${modeName ? `<span><span class="tag">Modo</span> ${escapeHtml(modeName)}</span>` : ""}
             ${dpsName ? `<span><span class="tag">DPS</span> ${escapeHtml(dpsName)}</span>` : ""}
-            ${r.points ? `<span><span class="tag">Puntos</span> ${Number(r.points).toLocaleString("es-ES")}</span>` : ""}
           </div>
           <div class="rotation-card-actions">
             <a class="btn btn-ghost" href="rotation-view.html?id=${r.id}">Ver</a>

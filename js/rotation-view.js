@@ -4,14 +4,6 @@ function escapeHtml(s) {
   }[c]));
 }
 
-function hexToRgbaRV(hex, alpha) {
-  const h = hex.replace("#", "");
-  const r = parseInt(h.substring(0, 2), 16);
-  const g = parseInt(h.substring(2, 4), 16);
-  const b = parseInt(h.substring(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
 async function loadRotation() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get("id");
@@ -42,20 +34,11 @@ async function loadRotation() {
     const { data: c } = await sb.from("characters").select("name").eq("id", r.dps_character_id).single();
     if (c) metaParts.push(`DPS: ${c.name}`);
   }
-  if (r.points) metaParts.push(`Puntos: ${Number(r.points).toLocaleString("es-ES")}`);
   document.getElementById("rv-meta").textContent = metaParts.join("   //   ");
 
   if (r.notes) {
     document.getElementById("rv-notes").classList.remove("hidden");
     document.getElementById("rv-notes").innerHTML = `<strong>Notas:</strong> ${escapeHtml(r.notes)}`;
-  }
-
-  if (r.screenshot_url) {
-    document.getElementById("rv-screenshot").classList.remove("hidden");
-    document.getElementById("rv-screenshot").innerHTML = `
-      <strong>Captura de resultado</strong>
-      <div style="margin-top:8px;"><img src="${r.screenshot_url}" style="max-width:320px; max-height:400px; object-fit:contain; border-radius:6px; border:1px solid var(--line);" /></div>
-    `;
   }
 
   const grid0 = r.grid || {};
@@ -100,41 +83,6 @@ async function loadRotation() {
   const charMap = {};
   (chars || []).forEach((c) => (charMap[c.id] = c));
 
-  if (allCharIds.size) {
-    const { data: charNotes } = await sb.from("notes").select("*").in("character_id", [...allCharIds]);
-    const notesByChar = {};
-    (charNotes || []).forEach((n) => {
-      if (!notesByChar[n.character_id]) notesByChar[n.character_id] = [];
-      notesByChar[n.character_id].push(n);
-    });
-
-    const charsWithNotes = [...allCharIds].filter((id) => notesByChar[id]?.length);
-    if (charsWithNotes.length) {
-      document.getElementById("rv-char-notes").classList.remove("hidden");
-      document.getElementById("rv-char-notes").innerHTML = `
-        <strong>Notas de personajes</strong>
-        <div style="margin-top:10px; display:flex; flex-direction:column; gap:12px;">
-          ${charsWithNotes
-            .map((id) => {
-              const c = charMap[id];
-              const list = notesByChar[id];
-              return `
-                <div>
-                  <div style="font-family:var(--f-mono); font-size:12px; color:var(--red-glow); margin-bottom:4px;">
-                    ${c && c.avatar_url ? `<img src="${c.avatar_url}" class="th-avatar" />` : ""}${escapeHtml(c ? c.name : "")}
-                  </div>
-                  ${list
-                    .map((n) => `<div style="font-size:13px; margin-bottom:6px;"><em>${escapeHtml(n.title || "Sin título")}</em>${n.content ? " — " + escapeHtml(n.content) : ""}</div>`)
-                    .join("")}
-                </div>
-              `;
-            })
-            .join("")}
-        </div>
-      `;
-    }
-  }
-
   let entryPersonaMap = {};
   if (allPersonaIds.size) {
     const { data: entryPersonas } = await sb.from("personas").select("*").in("id", [...allPersonaIds]);
@@ -159,7 +107,7 @@ async function loadRotation() {
   let html = `<table class="export-table" style="width:100%;">
     <colgroup>
       <col class="export-turn-th" />
-      ${grid.columns.map(() => `<col style="width:${colWidthPct}%;" /><col class="export-hl-col" />`).join("")}
+      ${grid.columns.map(() => `<col style="width:${colWidthPct}%;" />`).join("")}
     </colgroup>
     <thead><tr>
       <th class="export-turn-th"></th>
@@ -168,7 +116,7 @@ async function loadRotation() {
       return `<th style="background:${c ? c.color_bg : "#2c1f21"}; color:${c ? c.color_text : "#efe6dd"}">
         ${c && c.avatar_url ? `<img src="${c.avatar_url}" class="th-avatar" />` : ""}
         ${c ? escapeHtml(c.name) : "—"}
-      </th><th class="export-hl-th">HL</th>`;
+      </th>`;
     }).join("")}</tr></thead>
     <tbody>`;
 
@@ -183,30 +131,30 @@ async function loadRotation() {
     turn.cells.forEach((cell, colIdx) => {
       const columnCharId = grid.columns[colIdx];
       if (cell.length === 0) {
-        html += `<td></td><td class="export-hl-td"></td>`;
+        html += `<td></td>`;
         return;
       }
-      let actionsHtml = "";
-      let hlHtml = "";
-      cell.forEach((entry) => {
-        const color = entry?.color || (entry?.tag ? TAG_COLORS[entry.tag] : null);
-        const entryCharId = entry.characterId || columnCharId;
-        const entryChar = charMap[entryCharId];
-        const isWonderEntry = entryChar && entryChar.name.trim().toLowerCase() === "wonder";
-        const showAvatar = isWonderEntry || entryCharId !== columnCharId;
-        const avatarSrc = isWonderEntry ? entryPersonaMap[entry.personaId]?.avatar_url : entryChar?.avatar_url;
-        const avatarImg = showAvatar && avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
-        let skillIconUrl = null;
-        if (entry.actionLabel) {
-          skillIconUrl = isWonderEntry
-            ? personaSkillIconMap[`${entry.personaId}||${entry.actionLabel}`]
-            : actionIconMap[`${entryChar?.id}||${entry.actionLabel}`];
-        }
-        const skillIconImg = skillIconUrl ? `<img src="${skillIconUrl}" class="td-skill-icon" />` : "";
-        actionsHtml += `<div class="cell-action">${avatarImg}${skillIconImg}${escapeHtml(entry.actionLabel || "")}</div>`;
-        hlHtml += `<div class="cell-hl" style="${color ? `background:${color};` : ""}"></div>`;
-      });
-      html += `<td>${actionsHtml}</td><td class="export-hl-td">${hlHtml}</td>`;
+      const actionsHtml = cell
+        .map((entry) => {
+          const color = entry?.tag ? TAG_COLORS[entry.tag] : null;
+          const lineStyle = color ? `background:${color}2e; color:${color}; font-weight:600;` : "";
+          const entryCharId = entry.characterId || columnCharId;
+          const entryChar = charMap[entryCharId];
+          const isWonderEntry = entryChar && entryChar.name.trim().toLowerCase() === "wonder";
+          const showAvatar = isWonderEntry || entryCharId !== columnCharId;
+          const avatarSrc = isWonderEntry ? entryPersonaMap[entry.personaId]?.avatar_url : entryChar?.avatar_url;
+          const avatarImg = showAvatar && avatarSrc ? `<img src="${avatarSrc}" class="td-avatar" />` : "";
+          let skillIconUrl = null;
+          if (entry.actionLabel) {
+            skillIconUrl = isWonderEntry
+              ? personaSkillIconMap[`${entry.personaId}||${entry.actionLabel}`]
+              : actionIconMap[`${entryChar?.id}||${entry.actionLabel}`];
+          }
+          const skillIconImg = skillIconUrl ? `<img src="${skillIconUrl}" class="td-skill-icon" />` : "";
+          return `<div class="cell-action" style="${lineStyle}">${avatarImg}${skillIconImg}${escapeHtml(entry.actionLabel || "")}</div>`;
+        })
+        .join("");
+      html += `<td>${actionsHtml}</td>`;
     });
 
     html += "</tr>";
